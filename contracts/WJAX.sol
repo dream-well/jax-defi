@@ -221,6 +221,10 @@ contract WJAX is BEP20 {
 
     address colony_address = jaxPlanet.getUserColonyAddress(recipient);
     
+    if(colony_address == address(0)) {
+        colony_address = jaxPlanet.getMotherColonyAddress(recipient);
+    }
+
     // Transfer transaction tax to colonies.
     // immediate colony will get 50% of transaction tax, mother of that colony will get 25% ... mother of 4th colony will get 3.125%
     // 3.125% of transaction tax will go to JaxCorp Dao public key address.
@@ -266,11 +270,6 @@ contract WJAX is BEP20 {
     if(ubi_tax_amount > 0){
         super._transfer(sender, jaxPlanet.ubi_tax_wallet(), ubi_tax_amount);  // ubi tax
     }
-
-    if(colony_address == address(0)) {
-        colony_address = jaxPlanet.getMotherColonyAddress(recipient);
-    }
-
      
     // transferTransactionTax(mother_colony_addresses[recipient], tx_tax_amount, 1);          // Transfer tax to colonies and jaxCorp Dao
     // Optimize transferTransactionTax by using loop instead of recursive function
