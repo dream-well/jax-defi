@@ -197,6 +197,15 @@ contract JaxToken is BEP20 {
     require( amount > (tx_fee_amount + ubi_tax_amount + tx_tax_amount), "Total fee is greater than the transfer amount");
     super._transfer(sender, recipient, amount - tx_fee_amount - ubi_tax_amount - tx_tax_amount);
 
+    // Transfer transaction fee to transaction fee wallet
+    // Sender will get cashback.
+    if( tx_fee_amount > 0){
+        uint cashback_amount = (tx_fee_amount * cashback / 1e8);
+        if(cashback_amount > 0)
+          super._transfer(sender, sender, cashback_amount);
+        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount); //1e8
+    }
+
     // Transfer referral fees to referrers (70% to first referrer, each 10% to other referrers)
     if( maxreferral_fee > 0 && referrer != address(0xdEaD) && referrer != address(0)){
 
@@ -218,15 +227,6 @@ contract JaxToken is BEP20 {
                 }
             }
         }
-    }
-
-    // Transfer transaction fee to transaction fee wallet
-    // Sender will get cashback.
-    if( tx_fee_amount > 0){
-        uint cashback_amount = (tx_fee_amount * cashback / 1e8);
-        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount); //1e8
-        if(cashback_amount > 0)
-          super._transfer(sender, sender, cashback_amount);
     }
 
     

@@ -220,11 +220,11 @@ contract WJAX is BEP20 {
     uint ubi_tax_amount = amount * jaxPlanet.ubi_tax() / 1e8;
 
     address colony_address = jaxPlanet.getUserColonyAddress(recipient);
-    
+
     if(colony_address == address(0)) {
         colony_address = jaxPlanet.getMotherColonyAddress(recipient);
     }
-
+    
     // Transfer transaction tax to colonies.
     // immediate colony will get 50% of transaction tax, mother of that colony will get 25% ... mother of 4th colony will get 3.125%
     // 3.125% of transaction tax will go to JaxCorp Dao public key address.
@@ -233,6 +233,15 @@ contract WJAX is BEP20 {
     // Transfer tokens to recipient. recipient will pay the fees.
     require( amount > (tx_fee_amount + ubi_tax_amount + tx_tax_amount), "Total fee is greater than the transfer amount");
     super._transfer(sender, recipient, amount - tx_fee_amount - ubi_tax_amount - tx_tax_amount);
+
+    // Transfer transaction fee to transaction fee wallet
+    // Sender will get cashback.
+    if( tx_fee_amount > 0){
+        uint cashback_amount = (tx_fee_amount * cashback / 1e8);
+        if(cashback_amount > 0)
+          super._transfer(sender, sender, cashback_amount);
+        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount); //1e8
+    }
 
     // Transfer referral fees to referrers (70% to first referrer, each 10% to other referrers)
     if( maxreferral_fee > 0 && referrer != address(0xdEaD) && referrer != address(0)){
@@ -255,15 +264,6 @@ contract WJAX is BEP20 {
                 }
             }
         }
-    }
-
-    // Transfer transaction fee to transaction fee wallet
-    // Sender will get cashback.
-    if( tx_fee_amount > 0){
-        uint cashback_amount = (tx_fee_amount * cashback / 1e8);
-        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount); //1e8
-        if(cashback_amount > 0)
-          super._transfer(sender, sender, cashback_amount);
     }
 
     
