@@ -203,19 +203,13 @@ contract JaxToken is BEP20 {
         uint cashback_amount = (tx_fee_amount * cashback / 1e8);
         if(cashback_amount > 0)
           super._transfer(sender, sender, cashback_amount);
-        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount); //1e8
-    }
+        
+        // Transfer referral fees to referrers (70% to first referrer, each 10% to other referrers)
+        if( maxreferral_fee > 0 && referrer != address(0xdEaD) && referrer != address(0)){
 
-    // Transfer referral fees to referrers (70% to first referrer, each 10% to other referrers)
-    if( maxreferral_fee > 0 && referrer != address(0xdEaD) && referrer != address(0)){
-
-        super._transfer(sender, referrer, 70 * maxreferral_fee / 1e8 / 100);
-        referrer = referrers[referrer];
-        totalreferral_fees += 70 * maxreferral_fee / 1e8 / 100;
-        if( referrer != address(0xdEaD) && referrer != address(0)){
-            super._transfer(sender, referrer, 10 * maxreferral_fee / 1e8 / 100);
+            super._transfer(sender, referrer, 70 * maxreferral_fee / 1e8 / 100);
             referrer = referrers[referrer];
-            totalreferral_fees += 10 * maxreferral_fee / 1e8 / 100;
+            totalreferral_fees += 70 * maxreferral_fee / 1e8 / 100;
             if( referrer != address(0xdEaD) && referrer != address(0)){
                 super._transfer(sender, referrer, 10 * maxreferral_fee / 1e8 / 100);
                 referrer = referrers[referrer];
@@ -224,11 +218,16 @@ contract JaxToken is BEP20 {
                     super._transfer(sender, referrer, 10 * maxreferral_fee / 1e8 / 100);
                     referrer = referrers[referrer];
                     totalreferral_fees += 10 * maxreferral_fee / 1e8 / 100;
+                    if( referrer != address(0xdEaD) && referrer != address(0)){
+                        super._transfer(sender, referrer, 10 * maxreferral_fee / 1e8 / 100);
+                        referrer = referrers[referrer];
+                        totalreferral_fees += 10 * maxreferral_fee / 1e8 / 100;
+                    }
                 }
             }
         }
+        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount); //1e8
     }
-
     
     if(ubi_tax_amount > 0){
         super._transfer(sender, jaxPlanet.ubi_tax_wallet(), ubi_tax_amount);  // ubi tax
