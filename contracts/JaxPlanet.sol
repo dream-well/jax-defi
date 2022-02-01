@@ -77,7 +77,7 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
   }
 
   function setUbiTax(uint _ubi_tax, address wallet) external onlyAjaxPrime {
-      require(_ubi_tax <= 1e8 * 50 / 100 , "UBI tax can't be more than 50.");
+      require(_ubi_tax <= 1e8 * 10 / 100 , "UBI tax can't be more than 10.");
       ubi_tax = _ubi_tax;
       ubi_tax_wallet = wallet;
       emit Set_Ubi_Tax(_ubi_tax, wallet);

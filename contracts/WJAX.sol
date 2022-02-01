@@ -213,6 +213,23 @@ contract WJAX is BEP20 {
     address referrer = referrers[recipient];
     uint totalreferral_fees = 0;
     uint maxreferral_fee = tx_fee_amount * referral_fee;
+
+    IJaxPlanet jaxPlanet = IJaxPlanet(jaxAdmin.jaxPlanet());
+    
+    //Transfer of UBI Tax        
+    uint ubi_tax_amount = amount * jaxPlanet.ubi_tax() / 1e8;
+
+    address colony_address = jaxPlanet.getUserColonyAddress(recipient);
+    
+    // Transfer transaction tax to colonies.
+    // immediate colony will get 50% of transaction tax, mother of that colony will get 25% ... mother of 4th colony will get 3.125%
+    // 3.125% of transaction tax will go to JaxCorp Dao public key address.
+    uint tx_tax_amount = amount * jaxPlanet.getColony(colony_address).transaction_tax / 1e8;     // Calculate transaction tax amount
+   
+    // Transfer tokens to recipient. recipient will pay the fees.
+    require( amount > (tx_fee_amount + ubi_tax_amount + tx_tax_amount), "Total fee is greater than the transfer amount");
+    super._transfer(sender, recipient, amount - tx_fee_amount - ubi_tax_amount - tx_tax_amount);
+
     // Transfer referral fees to referrers (70% to first referrer, each 10% to other referrers)
     if( maxreferral_fee > 0 && referrer != address(0xdEaD) && referrer != address(0)){
 
@@ -244,25 +261,17 @@ contract WJAX is BEP20 {
         if(cashback_amount > 0)
           super._transfer(sender, sender, cashback_amount);
     }
+
     
-    IJaxPlanet jaxPlanet = IJaxPlanet(jaxAdmin.jaxPlanet());
-    //Transfer of UBI Tax        
-    uint ubi_tax_amount = amount * jaxPlanet.ubi_tax() / 1e8;
     if(ubi_tax_amount > 0){
         super._transfer(sender, jaxPlanet.ubi_tax_wallet(), ubi_tax_amount);  // ubi tax
     }
-
-    address colony_address = jaxPlanet.getUserColonyAddress(recipient);
 
     if(colony_address == address(0)) {
         colony_address = jaxPlanet.getMotherColonyAddress(recipient);
     }
 
-    // Transfer transaction tax to colonies.
-    // immediate colony will get 50% of transaction tax, mother of that colony will get 25% ... mother of 4th colony will get 3.125%
-    // 3.125% of transaction tax will go to JaxCorp Dao public key address.
-    uint tx_tax_amount = amount * jaxPlanet.getColony(colony_address).transaction_tax / 1e8;     // Calculate transaction tax amount
-    
+     
     // transferTransactionTax(mother_colony_addresses[recipient], tx_tax_amount, 1);          // Transfer tax to colonies and jaxCorp Dao
     // Optimize transferTransactionTax by using loop instead of recursive function
 
@@ -281,9 +290,6 @@ contract WJAX is BEP20 {
         super._transfer(sender, jaxPlanet.jaxcorp_dao_wallet(), tx_tax_temp);
     }
 
-    // Transfer tokens to recipient. recipient will pay the fees.
-    require( amount > (tx_fee_amount + ubi_tax_amount + tx_tax_amount), "Total fee is greater than the transfer amount");
-    super._transfer(sender, recipient, amount - tx_fee_amount - ubi_tax_amount - tx_tax_amount);
 
     // set referrers as first sender when transferred amount exceeds the certain limit.
     // recipient mustn't be sender's referrer, recipient couldn't be referrer itself
