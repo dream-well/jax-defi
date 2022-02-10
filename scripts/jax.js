@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require("hardhat");
 
-const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3";
+const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3"; // bsctestnet
 
 void async function main() {
 
@@ -70,11 +70,7 @@ void async function main() {
   }
 
   async function deployJaxSwap() {
-    // JaxSwap
-
-    // const JaxLibrary = await ethers.getContractFactory("JaxLibrary");
-    // jaxLibrary = await JaxLibrary.deploy();
-    // JaxSwap
+    
     const JaxSwap = await ethers.getContractFactory("JaxSwap");
     jaxSwap = await upgrades.deployProxy(JaxSwap, [jaxAdmin.address, pancakeRouter.address], { initializer: 'initialize' });
     await jaxSwap.deployed();
@@ -122,12 +118,6 @@ void async function main() {
       console.log("liquidity error");
     }
     
-    // await wjxn.approve(pancakeRouter.address, max_uint);
-    // await wjax.approve(pancakeRouter.address, max_uint);
-    // await busd.approve(pancakeRouter.address, max_uint);
-    // await pancakeRouter.addLiquidity(wjxn.address, wjax.address, ethers.utils.parseUnits("1000000", 0), ethers.utils.parseUnits("1000000", 4), "0", "0", owner.address, parseInt((new Date).getTime() / 1000 + 1000) + "");
-    // await pancakeRouter.addLiquidity(wjax.address, busd.address, ethers.utils.parseUnits("1000000", 4), ethers.utils.parseUnits("1000000", 18), 0, 0, owner.address, parseInt((new Date).getTime() / 1000 + 1000) + "");
-    // await pancakeRouter.addLiquidity(wjxn.address, busd.address, ethers.utils.parseUnits("1000000", 0), ethers.utils.parseUnits("1000000", 18), "0", "0", owner.address, parseInt((new Date).getTime() / 1000 + 1000) + "");
   }
 
   async function deployYields() {

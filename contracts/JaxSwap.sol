@@ -95,6 +95,15 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     _;
   }
 
+  modifier ensure(uint deadline) {
+    require(deadline >= block.timestamp, 'JaxSwap: EXPIRED');
+    _;
+  }
+  
+  function check_amount_out(uint amountOut, uint amountOutMin) internal pure {
+    require(amountOut >= amountOutMin, "JaxSwap: INSUFFICIENT_OUTPUT_AMOUNT");
+  }
+
   function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
     jaxAdmin = IJaxAdmin(newJaxAdmin);
     jaxAdmin.system_status(); // check if jaxAdmin is correct contract.
@@ -162,8 +171,8 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     emit Swap_WJXN_VRP(from, to, amountIn, amountOut);
   }
 
-  function swap_wjxn_vrp(uint amountIn) external isActive {
-    _swap_wjxn_vrp(msg.sender, msg.sender, amountIn);
+  function swap_wjxn_vrp(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+    check_amount_out(_swap_wjxn_vrp(msg.sender, msg.sender, amountIn), amountOutMin);
   }
 
   function _swap_vrp_wjxn(address from, address to, uint amountIn) internal returns(uint amountOut) {
@@ -187,8 +196,8 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     emit Swap_VRP_WJXN(from, to, amountIn, amountOut);
   }
 
-  function swap_vrp_wjxn(uint amountIn) external isActive {
-    _swap_vrp_wjxn(msg.sender, msg.sender, amountIn);
+  function swap_vrp_wjxn(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+    check_amount_out(_swap_vrp_wjxn(msg.sender, msg.sender, amountIn), amountOutMin);
   }
 
   function _swap_wjax_jusd(address from, address to, uint amountIn) internal returns(uint amountOut) {
@@ -206,8 +215,8 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
 		emit Swap_WJAX_JUSD(from, to, amountIn, amountOut);
   }
 
-  function swap_wjax_jusd(uint amountIn) external isActive{
-    _swap_wjax_jusd(msg.sender, msg.sender, amountIn);
+  function swap_wjax_jusd(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+    check_amount_out(_swap_wjax_jusd(msg.sender, msg.sender, amountIn), amountOutMin);
 	}
 
   function _swap_jusd_wjax(address from, address to, uint amountIn) internal returns(uint amountOut) {
@@ -223,8 +232,8 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
 		emit Swap_JUSD_WJAX(from, to, amountIn, amountOut);
   }
 
-  function swap_jusd_wjax(uint jusd_amount) external isActive {
-		_swap_jusd_wjax(msg.sender, msg.sender, jusd_amount);
+  function swap_jusd_wjax(uint jusd_amount, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+	  _swap_jusd_wjax(msg.sender, msg.sender, jusd_amount);
 	}
 
   function _swap_jusd_jtoken(address from, address to, address jtoken, uint amountIn) internal returns(uint amountOut) {
@@ -243,8 +252,8 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     emit Swap_JUSD_JToken(jtoken, from, to, amountIn, amountOut);
   }
 
-  function swap_jusd_jtoken(address jtoken, uint amountIn) external isActive {
-    _swap_jusd_jtoken(msg.sender, msg.sender, jtoken, amountIn);
+  function swap_jusd_jtoken(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external  ensure(deadline) isActive {
+    check_amount_out(_swap_jusd_jtoken(msg.sender, msg.sender, jtoken, amountIn), amountOutMin);
   }
 
   function _swap_jtoken_jusd(address from, address to, address jtoken, uint amountIn) internal returns(uint amountOut) {
@@ -262,8 +271,8 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     emit Swap_JToken_JUSD(jtoken, from, to, amountIn, amountOut);
   }
 
-  function swap_jtoken_jusd(address jtoken, uint amountIn) external isActive {
-    _swap_jtoken_jusd(msg.sender, msg.sender, jtoken, amountIn);
+  function swap_jtoken_jusd(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+    check_amount_out(_swap_jtoken_jusd(msg.sender, msg.sender, jtoken, amountIn), amountOutMin);
   }
 
   function _swap_jusd_busd(address from, address to, uint amountIn) internal returns(uint amountOut) {
@@ -287,8 +296,8 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     emit Swap_JUSD_BUSD(from, to, amountIn, amountOut);
   }
 
-  function swap_jusd_busd(uint amountIn) external isActive notContract {
-    _swap_jusd_busd(msg.sender, msg.sender, amountIn);
+  function swap_jusd_busd(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+    check_amount_out(_swap_jusd_busd(msg.sender, msg.sender, amountIn), amountOutMin);
   } 
 
   function _swap_busd_jusd(address from, address to, uint amountIn) internal returns(uint amountOut) {
@@ -307,28 +316,28 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
 		emit Swap_BUSD_JUSD(from, to, amountIn, amountOut);
   }
   
-  function swap_busd_jusd(uint amountIn) external isActive notContract {
-    _swap_busd_jusd(msg.sender, msg.sender, amountIn);
+  function swap_busd_jusd(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+    check_amount_out(_swap_busd_jusd(msg.sender, msg.sender, amountIn), amountOutMin);
 	}
 
-  function swap_jtoken_busd(address jtoken, uint amountIn) external isActive notContract {
+  function swap_jtoken_busd(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
     uint jusd_amount = _swap_jtoken_jusd(msg.sender, address(this), jtoken, amountIn);    
-    _swap_jusd_busd(address(this), msg.sender, jusd_amount);
+    check_amount_out(_swap_jusd_busd(address(this), msg.sender, jusd_amount), amountOutMin);
   }
 
-  function swap_busd_jtoken(address jtoken, uint amountIn) external isActive notContract {
+  function swap_busd_jtoken(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
     uint jusd_amount = _swap_busd_jusd(msg.sender, address(this), amountIn);
-    _swap_jusd_jtoken(address(this), msg.sender, jtoken, jusd_amount);
+    check_amount_out(_swap_jusd_jtoken(address(this), msg.sender, jtoken, jusd_amount), amountOutMin);
 	}
 
-  function swap_jtoken_wjax(address jtoken, uint amountIn) external isActive notContract {
+  function swap_jtoken_wjax(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
     uint jusd_amount = _swap_jtoken_jusd(msg.sender, address(this), jtoken, amountIn);
-    _swap_jusd_wjax(address(this), msg.sender, jusd_amount);
+    check_amount_out(_swap_jusd_wjax(address(this), msg.sender, jusd_amount), amountOutMin);
   }
 
-  function swap_wjax_jtoken(address jtoken, uint amountIn) external isActive notContract {
+  function swap_wjax_jtoken(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
     uint jusd_amount = _swap_wjax_jusd(msg.sender, address(this), amountIn);
-    _swap_jusd_jtoken(address(this), msg.sender, jtoken, jusd_amount);
+    check_amount_out(_swap_jusd_jtoken(address(this), msg.sender, jtoken, jusd_amount), amountOutMin);
   }
 
   function initialize(address _jaxAdmin, address pancakeRouter) external initializer {
