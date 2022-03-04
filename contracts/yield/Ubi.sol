@@ -188,6 +188,7 @@ contract Ubi is Initializable {
             address ajaxPrimeNominee = ajaxPrimeNomineeInfo[user];
             if(ajaxPrimeNomineeInfo[user] != address(0)) {
                 voteCountInfo[ajaxPrimeNominee] -= 1;
+                ajaxPrimeNomineeInfo[user] = address(0);
                 check_major_ajax_prime_nominee(ajaxPrimeNominee);
             }
         }
@@ -228,6 +229,7 @@ contract Ubi is Initializable {
     }
 
     function set_ajax_prime_nominee(address ajaxPrimeNominee) external {
+        require(ajaxPrimeNominee != address(0), "AjaxPrimeNominee should not be zero address");
         UserInfo storage info = userInfo[msg.sender];
         require(info.status == Status.Approved, "You are not approved");
         address old_ajaxPrimeNominee = ajaxPrimeNomineeInfo[msg.sender];
@@ -235,6 +237,7 @@ contract Ubi is Initializable {
         if(old_ajaxPrimeNominee != address(0)) {
             voteCountInfo[old_ajaxPrimeNominee] -= 1;
         }
+        ajaxPrimeNomineeInfo[msg.sender] = ajaxPrimeNominee;
         voteCountInfo[ajaxPrimeNominee] += 1;
         check_major_ajax_prime_nominee(ajaxPrimeNominee);
     }
