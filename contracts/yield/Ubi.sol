@@ -19,6 +19,7 @@ contract Ubi is Initializable {
     event Set_Minimum_Reward_Per_Person(uint amount);
     event Set_Verifiers(address[] verifiers);
     event Set_Verifier_Limit(address verifier, uint limit);
+    event Set_Locktime(uint locktime);
 
     address public ajaxPrime;
     address public rewardToken;
@@ -37,6 +38,7 @@ contract Ubi is Initializable {
         uint collectedReward;
         uint releasedReward;
         uint idHash;
+        address verifier;
         Status status;
         string remarks;
         CollectInfo[] collects;
@@ -45,6 +47,8 @@ contract Ubi is Initializable {
     uint public totalRewardPerPerson;
     uint public userCount;
     uint public minimumRewardPerPerson;
+
+    uint public locktime;
 
     mapping(address => UserInfo) public userInfo;
     mapping(address => uint) public verifierLimitInfo;
@@ -113,7 +117,7 @@ contract Ubi is Initializable {
         info.collectedReward += reward;
         CollectInfo memory collect;
         collect.collect_timestamp = uint64(block.timestamp);
-        collect.unlock_timestamp = uint64(block.timestamp + 30 days);
+        collect.unlock_timestamp = uint64(block.timestamp + locktime);
         collect.amount = reward;
         info.collects.push(collect);
         emit Collect_UBI(msg.sender, info.collects.length - 1, reward);
@@ -121,6 +125,7 @@ contract Ubi is Initializable {
 
     function unlock_collect(address user, uint collect_id) external onlyVerifier {
         UserInfo storage info = userInfo[user];
+        require(info.verifier == msg.sender, "Invalid verifier");
         require(info.collects.length > collect_id, "Invalid collect_id");
         CollectInfo storage collect = info.collects[collect_id];
         require(collect.release_timestamp == 0, "Already released");
@@ -151,6 +156,7 @@ contract Ubi is Initializable {
         }
         info.idHash = idHash;
         info.remarks = remarks;
+        info.verifier = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
         emit Accept_User(user, idHash, remarks);
@@ -178,15 +184,21 @@ contract Ubi is Initializable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(address _ajaxPrime, address _rewardToken) external initializer {
+    function initialize(address _ajaxPrime, address _rewardToken, uint _locktime) external initializer {
         ajaxPrime = _ajaxPrime;
         rewardToken = _rewardToken;
+        locktime = _locktime;
     }
 
     function set_ajax_prime(address newAjaxPrime) external onlyAjaxPrime {
         address oldAjaxPrime = ajaxPrime;
         ajaxPrime = newAjaxPrime;
         emit Set_Ajax_Prime(oldAjaxPrime, newAjaxPrime);
+    }
+
+    function set_locktime(uint _locktime) external onlyAjaxPrime {
+        locktime = _locktime;
+        emit Set_Locktime(_locktime);
     }
 
     function withdrawByAdmin(address token, uint amount) external onlyAjaxPrime {
