@@ -12,6 +12,7 @@ contract Ubi is Initializable {
     event Register(address user);
     event Accept_User(address user, uint idHash, string remarks);
     event Reject_User(address user, string remarks);
+    event Change_Verifier(address verifier);
     event Collect_UBI(address indexed user, uint collect_id, uint amount);
     event Release_Collect(address indexed user, uint collect_id, uint amount);
     event Unlock_Collect(address indexed user, uint collect_id, address verifier);
@@ -62,17 +63,21 @@ contract Ubi is Initializable {
     }
 
     modifier onlyVerifier() {
-        uint verifierCnt = verifiers.length;
-        uint index;
-        for(; index < verifierCnt; index += 1) {
-            if(verifiers[index] == msg.sender){
-                break;
-            }
-        }
-        require(index < verifierCnt, "Only Verifier");
+        require(isVerifier(msg.sender), "Only Verifier");
         require(verifierLimitInfo[msg.sender] > 0, "Operating limit reached");
         _;
         verifierLimitInfo[msg.sender] -= 1;
+    }
+
+    function isVerifier(address verifier) public view returns (bool) {
+        uint verifierCnt = verifiers.length;
+        uint index;
+        for(; index < verifierCnt; index += 1) {
+            if(verifiers[index] == verifier){
+                return true;
+            }
+        }
+        return false;
     }
 
     function setVerifiers (address[] calldata _verifiers) external onlyAjaxPrime {
@@ -172,6 +177,14 @@ contract Ubi is Initializable {
         idHashInfo[info.idHash] = address(0);
         info.remarks = remarks;
         emit Reject_User(user, remarks);
+    }
+
+    function changeVerifier(address verifier) external {
+        UserInfo storage info = userInfo[msg.sender];
+        require(info.status == Status.Approved, "You are not approved");
+        require(isVerifier(verifier), "Only valid verifier");
+        info.verifier = verifier;
+        emit Change_Verifier(verifier);
     }
 
     function register() external {
