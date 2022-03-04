@@ -12,14 +12,14 @@ contract Ubi is Initializable {
     event Register(address user);
     event Accept_User(address user, uint idHash, string remarks);
     event Reject_User(address user, string remarks);
-    event Change_My_Governor(address governor);
+    event Change_My_JaxCorp_Governor(address jaxCorp_governor);
     event Collect_UBI(address indexed user, uint collect_id, uint amount);
     event Release_Collect(address indexed user, uint collect_id, uint amount);
-    event Unlock_Collect(address indexed user, uint collect_id, address governor);
+    event Unlock_Collect(address indexed user, uint collect_id, address jaxCorp_governor);
     event Deposit_Reward(uint amount);
     event Set_Minimum_Reward_Per_Person(uint amount);
-    event Set_Governors(address[] governors);
-    event Set_Governor_Limit(address governor, uint limit);
+    event Set_JaxCorp_Governors(address[] jaxCorp_governors);
+    event Set_JaxCorp_Governor_Limit(address jaxCorp_governor, uint limit);
     event Set_Locktime(uint locktime);
     event Set_Major_Ajax_Prime_Nominee(address ajaxPrimeNominee);
 
@@ -40,7 +40,7 @@ contract Ubi is Initializable {
         uint collectedReward;
         uint releasedReward;
         uint idHash;
-        address governor;
+        address jaxCorp_governor;
         Status status;
         string remarks;
         CollectInfo[] collects;
@@ -55,8 +55,8 @@ contract Ubi is Initializable {
     address public majorAjaxPrimeNominee;
 
     mapping(address => UserInfo) public userInfo;
-    mapping(address => uint) public governorLimitInfo;
-    address[] public governors;
+    mapping(address => uint) public jaxCorpGovernorLimitInfo;
+    address[] public jaxCorp_governors;
     mapping(uint => address) public idHashInfo;
     mapping(address => uint) public voteCountInfo;
     mapping(address => address) public ajaxPrimeNomineeInfo;
@@ -66,36 +66,36 @@ contract Ubi is Initializable {
         _;
     }
 
-    modifier onlyGovernor() {
-        require(isGovernor(msg.sender), "Only Governor");
-        require(governorLimitInfo[msg.sender] > 0, "Operating limit reached");
+    modifier onlyJaxCorpGovernor() {
+        require(isJaxCorpGovernor(msg.sender), "Only Governor");
+        require(jaxCorpGovernorLimitInfo[msg.sender] > 0, "Operating limit reached");
         _;
-        governorLimitInfo[msg.sender] -= 1;
+        jaxCorpGovernorLimitInfo[msg.sender] -= 1;
     }
 
-    function isGovernor(address governor) public view returns (bool) {
-        uint governorCnt = governors.length;
+    function isJaxCorpGovernor(address jaxCorp_governor) public view returns (bool) {
+        uint jaxCorp_governorCnt = jaxCorp_governors.length;
         uint index;
-        for(; index < governorCnt; index += 1) {
-            if(governors[index] == governor){
+        for(; index < jaxCorp_governorCnt; index += 1) {
+            if(jaxCorp_governors[index] == jaxCorp_governor){
                 return true;
             }
         }
         return false;
     }
 
-    function setGovernors (address[] calldata _governors) external onlyAjaxPrime {
-        uint governorsCnt = _governors.length;
-        delete governors;
-        for(uint index; index < governorsCnt; index += 1 ) {
-            governors.push(_governors[index]);
+    function setGovernors (address[] calldata _jaxCorp_governors) external onlyAjaxPrime {
+        uint jaxCorp_governorsCnt = _jaxCorp_governors.length;
+        delete jaxCorp_governors;
+        for(uint index; index < jaxCorp_governorsCnt; index += 1 ) {
+            jaxCorp_governors.push(_jaxCorp_governors[index]);
         }
-        emit Set_Governors(_governors);
+        emit Set_JaxCorp_Governors(_jaxCorp_governors);
     }
 
-    function setGovernorLimit(address governor, uint limit) external onlyAjaxPrime {
-        governorLimitInfo[governor] = limit;
-        emit Set_Governor_Limit(governor, limit);
+    function setGovernorLimit(address jaxCorp_governor, uint limit) external onlyAjaxPrime {
+        jaxCorpGovernorLimitInfo[jaxCorp_governor] = limit;
+        emit Set_JaxCorp_Governor_Limit(jaxCorp_governor, limit);
     }
 
     function set_reward_token(address _rewardToken) external onlyAjaxPrime {
@@ -135,9 +135,9 @@ contract Ubi is Initializable {
         }
     }
 
-    function unlock_collect(address user, uint collect_id) external onlyGovernor {
+    function unlock_collect(address user, uint collect_id) external onlyJaxCorpGovernor {
         UserInfo storage info = userInfo[user];
-        require(info.governor == msg.sender, "Invalid governor");
+        require(info.jaxCorp_governor == msg.sender, "Invalid jaxCorp_governor");
         require(info.collects.length > collect_id, "Invalid collect_id");
         CollectInfo storage collect = info.collects[collect_id];
         require(collect.release_timestamp == 0, "Already released");
@@ -163,7 +163,7 @@ contract Ubi is Initializable {
         _release_collect(msg.sender, collect_id);
     }
 
-    function approveUser(address user, uint idHash, string calldata remarks) external onlyGovernor {
+    function approveUser(address user, uint idHash, string calldata remarks) external onlyJaxCorpGovernor {
         UserInfo storage info = userInfo[user];
         require(info.status != Status.Init, "User is not registered");
         require(info.status != Status.Approved, "Already approved");
@@ -174,13 +174,13 @@ contract Ubi is Initializable {
         }
         info.idHash = idHash;
         info.remarks = remarks;
-        info.governor = msg.sender;
+        info.jaxCorp_governor = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
         emit Accept_User(user, idHash, remarks);
     }
 
-    function rejectUser(address user, string calldata remarks) external onlyGovernor {
+    function rejectUser(address user, string calldata remarks) external onlyJaxCorpGovernor {
         UserInfo storage info = userInfo[user];
         require(info.status != Status.Init, "User is not registered");
         if(info.status == Status.Approved) {
@@ -197,12 +197,12 @@ contract Ubi is Initializable {
         emit Reject_User(user, remarks);
     }
 
-    function changeMyGovernor(address governor) external {
+    function changeMyJaxCorpGovernor(address jaxCorp_governor) external {
         UserInfo storage info = userInfo[msg.sender];
         require(info.status == Status.Approved, "You are not approved");
-        require(isGovernor(governor), "Only valid governor");
-        info.governor = governor;
-        emit Change_My_Governor(governor);
+        require(isJaxCorpGovernor(jaxCorp_governor), "Only valid jaxCorp_governor");
+        info.jaxCorp_governor = jaxCorp_governor;
+        emit Change_My_JaxCorp_Governor(jaxCorp_governor);
     }
 
     function register() external {
