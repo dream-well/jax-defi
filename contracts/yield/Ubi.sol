@@ -126,6 +126,9 @@ contract Ubi is Initializable {
         collect.amount = reward;
         info.collects.push(collect);
         emit Collect_UBI(msg.sender, info.collects.length - 1, reward);
+        if(locktime == 0) {
+            _release_collect(msg.sender, info.collects.length - 1);
+        }
     }
 
     function unlock_collect(address user, uint collect_id) external onlyVerifier {
@@ -137,17 +140,22 @@ contract Ubi is Initializable {
         require(uint(collect.unlock_timestamp) > block.timestamp, "Already unlocked");
         collect.unlock_timestamp = uint64(block.timestamp);
         emit Unlock_Collect(user, collect_id, msg.sender);
+        _release_collect(user, collect_id);
     }
 
-    function release_collect(uint collect_id) external {
-        UserInfo storage info = userInfo[msg.sender];
+    function _release_collect(address user, uint collect_id) internal {
+        UserInfo storage info = userInfo[user];
         require(info.collects.length > collect_id, "Invalid collect_id");
         CollectInfo storage collect = info.collects[collect_id];
         require(collect.release_timestamp == 0, "Already released");
         require(uint(collect.unlock_timestamp) <= block.timestamp, "Locked");
         collect.release_timestamp = uint64(block.timestamp);
-        IERC20(rewardToken).transfer(msg.sender, collect.amount);
-        emit Release_Collect(msg.sender, collect_id, collect.amount);
+        IERC20(rewardToken).transfer(user, collect.amount);
+        emit Release_Collect(user, collect_id, collect.amount);
+    }
+
+    function release_collect(uint collect_id) public {
+        _release_collect(msg.sender, collect_id);
     }
 
     function approveUser(address user, uint idHash, string calldata remarks) external onlyVerifier {
