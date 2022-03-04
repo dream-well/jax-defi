@@ -12,15 +12,16 @@ contract Ubi is Initializable {
     event Register(address user);
     event Accept_User(address user, uint idHash, string remarks);
     event Reject_User(address user, string remarks);
-    event Change_Verifier(address verifier);
+    event Change_My_Governor(address governor);
     event Collect_UBI(address indexed user, uint collect_id, uint amount);
     event Release_Collect(address indexed user, uint collect_id, uint amount);
-    event Unlock_Collect(address indexed user, uint collect_id, address verifier);
+    event Unlock_Collect(address indexed user, uint collect_id, address governor);
     event Deposit_Reward(uint amount);
     event Set_Minimum_Reward_Per_Person(uint amount);
-    event Set_Verifiers(address[] verifiers);
-    event Set_Verifier_Limit(address verifier, uint limit);
+    event Set_Governors(address[] governors);
+    event Set_Governor_Limit(address governor, uint limit);
     event Set_Locktime(uint locktime);
+    event Set_Major_Ajax_Prime_Nominee(address ajaxPrimeNominee);
 
     address public ajaxPrime;
     address public rewardToken;
@@ -39,7 +40,7 @@ contract Ubi is Initializable {
         uint collectedReward;
         uint releasedReward;
         uint idHash;
-        address verifier;
+        address governor;
         Status status;
         string remarks;
         CollectInfo[] collects;
@@ -51,47 +52,50 @@ contract Ubi is Initializable {
 
     uint public locktime;
 
-    mapping(address => UserInfo) public userInfo;
-    mapping(address => uint) public verifierLimitInfo;
-    address[] public verifiers;
-    mapping(uint => address) public idHashInfo;
+    address public majorAjaxPrimeNominee;
 
+    mapping(address => UserInfo) public userInfo;
+    mapping(address => uint) public governorLimitInfo;
+    address[] public governors;
+    mapping(uint => address) public idHashInfo;
+    mapping(address => uint) public voteCountInfo;
+    mapping(address => address) public ajaxPrimeNomineeInfo;
 
     modifier onlyAjaxPrime() {
         require(msg.sender == ajaxPrime, "Only Admin");
         _;
     }
 
-    modifier onlyVerifier() {
-        require(isVerifier(msg.sender), "Only Verifier");
-        require(verifierLimitInfo[msg.sender] > 0, "Operating limit reached");
+    modifier onlyGovernor() {
+        require(isGovernor(msg.sender), "Only Governor");
+        require(governorLimitInfo[msg.sender] > 0, "Operating limit reached");
         _;
-        verifierLimitInfo[msg.sender] -= 1;
+        governorLimitInfo[msg.sender] -= 1;
     }
 
-    function isVerifier(address verifier) public view returns (bool) {
-        uint verifierCnt = verifiers.length;
+    function isGovernor(address governor) public view returns (bool) {
+        uint governorCnt = governors.length;
         uint index;
-        for(; index < verifierCnt; index += 1) {
-            if(verifiers[index] == verifier){
+        for(; index < governorCnt; index += 1) {
+            if(governors[index] == governor){
                 return true;
             }
         }
         return false;
     }
 
-    function setVerifiers (address[] calldata _verifiers) external onlyAjaxPrime {
-        uint verifiersCnt = _verifiers.length;
-        delete verifiers;
-        for(uint index; index < verifiersCnt; index += 1 ) {
-            verifiers.push(_verifiers[index]);
+    function setGovernors (address[] calldata _governors) external onlyAjaxPrime {
+        uint governorsCnt = _governors.length;
+        delete governors;
+        for(uint index; index < governorsCnt; index += 1 ) {
+            governors.push(_governors[index]);
         }
-        emit Set_Verifiers(_verifiers);
+        emit Set_Governors(_governors);
     }
 
-    function setVerifierLimit(address verifier, uint limit) external onlyAjaxPrime {
-        verifierLimitInfo[verifier] = limit;
-        emit Set_Verifier_Limit(verifier, limit);
+    function setGovernorLimit(address governor, uint limit) external onlyAjaxPrime {
+        governorLimitInfo[governor] = limit;
+        emit Set_Governor_Limit(governor, limit);
     }
 
     function set_reward_token(address _rewardToken) external onlyAjaxPrime {
@@ -131,9 +135,9 @@ contract Ubi is Initializable {
         }
     }
 
-    function unlock_collect(address user, uint collect_id) external onlyVerifier {
+    function unlock_collect(address user, uint collect_id) external onlyGovernor {
         UserInfo storage info = userInfo[user];
-        require(info.verifier == msg.sender, "Invalid verifier");
+        require(info.governor == msg.sender, "Invalid governor");
         require(info.collects.length > collect_id, "Invalid collect_id");
         CollectInfo storage collect = info.collects[collect_id];
         require(collect.release_timestamp == 0, "Already released");
@@ -150,6 +154,7 @@ contract Ubi is Initializable {
         require(collect.release_timestamp == 0, "Already released");
         require(uint(collect.unlock_timestamp) <= block.timestamp, "Locked");
         collect.release_timestamp = uint64(block.timestamp);
+        info.releasedReward += collect.amount;
         IERC20(rewardToken).transfer(user, collect.amount);
         emit Release_Collect(user, collect_id, collect.amount);
     }
@@ -158,7 +163,7 @@ contract Ubi is Initializable {
         _release_collect(msg.sender, collect_id);
     }
 
-    function approveUser(address user, uint idHash, string calldata remarks) external onlyVerifier {
+    function approveUser(address user, uint idHash, string calldata remarks) external onlyGovernor {
         UserInfo storage info = userInfo[user];
         require(info.status != Status.Init, "User is not registered");
         require(info.status != Status.Approved, "Already approved");
@@ -169,17 +174,22 @@ contract Ubi is Initializable {
         }
         info.idHash = idHash;
         info.remarks = remarks;
-        info.verifier = msg.sender;
+        info.governor = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
         emit Accept_User(user, idHash, remarks);
     }
 
-    function rejectUser(address user, string calldata remarks) external onlyVerifier {
+    function rejectUser(address user, string calldata remarks) external onlyGovernor {
         UserInfo storage info = userInfo[user];
         require(info.status != Status.Init, "User is not registered");
         if(info.status == Status.Approved) {
             userCount -= 1;
+            address ajaxPrimeNominee = ajaxPrimeNomineeInfo[user];
+            if(ajaxPrimeNomineeInfo[user] != address(0)) {
+                voteCountInfo[ajaxPrimeNominee] -= 1;
+                check_major_ajax_prime_nominee(ajaxPrimeNominee);
+            }
         }
         info.status = Status.Rejected;
         idHashInfo[info.idHash] = address(0);
@@ -187,12 +197,12 @@ contract Ubi is Initializable {
         emit Reject_User(user, remarks);
     }
 
-    function changeVerifier(address verifier) external {
+    function changeMyGovernor(address governor) external {
         UserInfo storage info = userInfo[msg.sender];
         require(info.status == Status.Approved, "You are not approved");
-        require(isVerifier(verifier), "Only valid verifier");
-        info.verifier = verifier;
-        emit Change_Verifier(verifier);
+        require(isGovernor(governor), "Only valid governor");
+        info.governor = governor;
+        emit Change_My_Governor(governor);
     }
 
     function register() external {
@@ -215,6 +225,29 @@ contract Ubi is Initializable {
         address oldAjaxPrime = ajaxPrime;
         ajaxPrime = newAjaxPrime;
         emit Set_Ajax_Prime(oldAjaxPrime, newAjaxPrime);
+    }
+
+    function set_ajax_prime_nominee(address ajaxPrimeNominee) external {
+        UserInfo storage info = userInfo[msg.sender];
+        require(info.status == Status.Approved, "You are not approved");
+        address old_ajaxPrimeNominee = ajaxPrimeNomineeInfo[msg.sender];
+        require(old_ajaxPrimeNominee != ajaxPrimeNominee, "Voted already");
+        if(old_ajaxPrimeNominee != address(0)) {
+            voteCountInfo[old_ajaxPrimeNominee] -= 1;
+        }
+        voteCountInfo[ajaxPrimeNominee] += 1;
+        check_major_ajax_prime_nominee(ajaxPrimeNominee);
+    }
+
+    function check_major_ajax_prime_nominee(address ajaxPrimeNominee) public {
+        if(voteCountInfo[ajaxPrimeNominee] > userCount / 2){
+            majorAjaxPrimeNominee = ajaxPrimeNominee;
+            emit Set_Major_Ajax_Prime_Nominee(ajaxPrimeNominee);
+        }
+        else if(voteCountInfo[majorAjaxPrimeNominee] <= userCount / 2){
+            majorAjaxPrimeNominee = address(0);
+            emit Set_Major_Ajax_Prime_Nominee(address(0));
+        }
     }
 
     function set_locktime(uint _locktime) external onlyAjaxPrime {
