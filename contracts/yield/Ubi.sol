@@ -12,7 +12,9 @@ contract Ubi is Initializable {
     event Register(address user);
     event Accept_User(address user, uint idHash, string remarks);
     event Reject_User(address user, string remarks);
-    event Collect_UBI(address indexed user, uint amount);
+    event Collect_UBI(address indexed user, uint collect_id, uint amount);
+    event Release_Collect(address indexed user, uint collect_id, uint amount);
+    event Unlock_Collect(address indexed user, uint collect_id, address verifier);
     event Deposit_Reward(uint amount);
     event Set_Minimum_Reward_Per_Person(uint amount);
     event Set_Verifiers(address[] verifiers);
@@ -23,11 +25,21 @@ contract Ubi is Initializable {
 
     enum Status { Init, Pending, Approved, Rejected }
 
+    struct CollectInfo {
+        uint amount;
+        uint64 collect_timestamp;
+        uint64 unlock_timestamp;
+        uint64 release_timestamp;
+    }
+
     struct UserInfo {
         uint harvestedReward;
+        uint collectedReward;
+        uint releasedReward;
         uint idHash;
         Status status;
         string remarks;
+        CollectInfo[] collects;
     }
 
     uint public totalRewardPerPerson;
@@ -97,9 +109,35 @@ contract Ubi is Initializable {
         require(info.status == Status.Approved, "You are not approved");
         uint reward = totalRewardPerPerson - info.harvestedReward;
         require(reward > 0, "Nothing to harvest");
-        IERC20(rewardToken).transfer(msg.sender, reward);
         info.harvestedReward = totalRewardPerPerson;
-        emit Collect_UBI(msg.sender, reward);
+        info.collectedReward += reward;
+        CollectInfo memory collect;
+        collect.collect_timestamp = uint64(block.timestamp);
+        collect.unlock_timestamp = uint64(block.timestamp + 30 days);
+        collect.amount = reward;
+        info.collects.push(collect);
+        emit Collect_UBI(msg.sender, info.collects.length - 1, reward);
+    }
+
+    function unlock_collect(address user, uint collect_id) external onlyVerifier {
+        UserInfo storage info = userInfo[user];
+        require(info.collects.length > collect_id, "Invalid collect_id");
+        CollectInfo storage collect = info.collects[collect_id];
+        require(collect.release_timestamp == 0, "Already released");
+        require(uint(collect.unlock_timestamp) > block.timestamp, "Already unlocked");
+        collect.unlock_timestamp = uint64(block.timestamp);
+        emit Unlock_Collect(user, collect_id, msg.sender);
+    }
+
+    function release_collect(uint collect_id) external {
+        UserInfo storage info = userInfo[msg.sender];
+        require(info.collects.length > collect_id, "Invalid collect_id");
+        CollectInfo storage collect = info.collects[collect_id];
+        require(collect.release_timestamp == 0, "Already released");
+        require(uint(collect.unlock_timestamp) <= block.timestamp, "Locked");
+        collect.release_timestamp = uint64(block.timestamp);
+        IERC20(rewardToken).transfer(msg.sender, collect.amount);
+        emit Release_Collect(msg.sender, collect_id, collect.amount);
     }
 
     function approveUser(address user, uint idHash, string calldata remarks) external onlyVerifier {
