@@ -67,7 +67,7 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
   function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
     address oldAdmin = address(jaxAdmin);
     jaxAdmin = IJaxAdmin(newJaxAdmin);
-    require(jaxAdmin.system_status() == 2, "Invalid Jax Admin status");
+    require(jaxAdmin.system_status() >= 0, "Invalid Jax Admin");
     emit Set_Jax_Admin(oldAdmin, newJaxAdmin);
   }
 

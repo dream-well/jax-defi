@@ -141,7 +141,7 @@ contract LpYield is Initializable, JaxOwnable {
 
     function setJaxAdmin(address _jaxAdmin) public onlyAdmin {
         jaxAdmin = IJaxAdmin(_jaxAdmin);    
-        require(jaxAdmin.system_status() == 2, "Invalid jaxadmin status");
+        require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
         emit Set_Jax_Admin(_jaxAdmin);
     }
     

@@ -106,7 +106,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
 
   function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
     jaxAdmin = IJaxAdmin(newJaxAdmin);
-    jaxAdmin.system_status(); // check if jaxAdmin is correct contract.
+    require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
     emit Set_Jax_Admin(newJaxAdmin);
   }
 
