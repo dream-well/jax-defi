@@ -146,13 +146,14 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   function userIsOperator (address _user) public view returns (bool) {
-    uint index;
+    uint index = 0;
+    uint j = 0;
     uint operatorCnt = operators.length;
     bytes4[] memory functions_whitelisted;
-    for(index = 0; index < operatorCnt; index += 1) {
+    for(index; index < operatorCnt; index += 1) {
       if(operators[index] == _user){
         functions_whitelisted = function_call_whitelist[_user];
-        for(uint j = 0; j < functions_whitelisted.length; j+=1) {
+        for(j = 0; j < functions_whitelisted.length; j+=1) {
           if(functions_whitelisted[j] == msg.sig)
             return true;
         }
@@ -231,8 +232,8 @@ contract JaxAdmin is Initializable, JaxOwnable {
   function setWhitelistForOperator(address operator, bytes4[] calldata functions) external onlyGovernor {
     bytes4[] storage whitelist = function_call_whitelist[operator];
     uint length = whitelist.length;
-    uint i;
-    for(i = 0; i < length; i+=1 ) {
+    uint i = 0;
+    for(; i < length; i+=1 ) {
       whitelist.pop();
     }
     for(i = 0; i < functions.length; i+=1) {
@@ -359,9 +360,9 @@ contract JaxAdmin is Initializable, JaxOwnable {
   function delete_jtoken(address token) external onlyAjaxPrime {
     JToken storage jtoken = jtokens[token];
     jtoken.jusd_ratio = 0;
-    uint jtoken_index;
+    uint jtoken_index = 0;
     uint jtoken_count = jtoken_addresses.length;
-    for(jtoken_index = 0; jtoken_index < jtoken_count; jtoken_index += 1){
+    for(jtoken_index; jtoken_index < jtoken_count; jtoken_index += 1){
       if(jtoken_addresses[jtoken_index] == token)
       {
         if(jtoken_count > 1)

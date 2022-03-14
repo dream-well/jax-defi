@@ -100,8 +100,8 @@ contract Ubi is Initializable {
 
     function isJaxCorpGovernor(address jaxCorp_governor) public view returns (bool) {
         uint jaxCorp_governorCnt = jaxCorp_governors.length;
-        uint index;
-        for(index = 0; index < jaxCorp_governorCnt; index += 1) {
+        uint index = 0;
+        for(index; index < jaxCorp_governorCnt; index += 1) {
             if(jaxCorp_governors[index] == jaxCorp_governor){
                 return true;
             }
