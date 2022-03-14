@@ -197,6 +197,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
   function setAdmin (address _admin ) external onlyAdmin {
     if(_admin == address(0x0)){
       admin = _admin;
+      new_admin = address(0x0);
       emit Update_Admin(_admin);
       return;
     }
@@ -249,7 +250,13 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Elect_Governor(_governor);
   }
 
-  function setAjaxPrime (address _ajaxPrime) external checkZeroAddress(_ajaxPrime) onlyAjaxPrime {
+  function setAjaxPrime (address _ajaxPrime) external onlyAjaxPrime {
+    if(_ajaxPrime == address(0x0)) {
+      ajaxPrime = _ajaxPrime;
+      new_ajaxPrime = address(0x0);
+      emit Update_AjaxPrime(_ajaxPrime);
+      return;
+    }
     new_ajaxPrime = _ajaxPrime;
     new_ajaxPrime_locktime = block.timestamp + 48 hours;
     emit Set_AjaxPrime(_ajaxPrime, new_ajaxPrime_locktime);
