@@ -205,10 +205,10 @@ contract JaxAdmin is Initializable, JaxOwnable {
 
   function updateAdmin () external {
     require(msg.sender == new_admin, "Only new admin");
-    require(block.timestamp >= new_admin_locktime, "Not unlocked yet");
+    require(block.timestamp >= new_admin_locktime, "New admin is not unlocked yet");
     admin = new_admin;
     new_admin = address(0x0);
-    emit Update_Admin(new_admin);
+    emit Update_Admin(admin);
   }
 
   function setGovernor (address _governor) external checkZeroAddress(_governor) onlyAjaxPrime {
