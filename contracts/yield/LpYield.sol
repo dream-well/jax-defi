@@ -306,6 +306,7 @@ contract LpYield is Initializable, JaxOwnable {
     }
 
     function set_liquidity_ratio_limit(uint _liquidity_ratio_limit) external onlyGovernor {
+        require(_liquidity_ratio_limit >= 1e7 && _liquidity_ratio_limit <= 1e8, "Liquidity ratio limit should be 10% - 100%");
         liquidity_ratio_limit = _liquidity_ratio_limit;
         emit Set_Liquidity_Ratio_Limit(liquidity_ratio_limit);
     }
