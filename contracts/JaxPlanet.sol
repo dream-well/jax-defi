@@ -136,6 +136,7 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
   }
 
   function setMinTransactionTax(uint128 min_tx_tax) external onlyAjaxPrime {
+    require(min_tx_tax <= 2e7, "min transaction tax is higher than 20%");
     min_transaction_tax = min_tx_tax;
     emit Set_Min_Transaction_Tax(min_tx_tax);
   }
