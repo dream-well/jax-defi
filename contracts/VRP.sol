@@ -130,19 +130,15 @@ contract VRP is IVRP, Initializable, JaxOwnable {
         _mint(account, amount);
     }
 
-    function burn(address account, uint256 amount) public onlyJaxSwap {
+    function burnFrom(address account, uint256 amount) public onlyJaxSwap {
         updateReward(account);
         UserInfo storage info = userInfo[account];
         info.sharePlus += amount * (block.number - lastEpochBlock);
         epochSharePlus += amount * (block.number - lastEpochBlock);
+        uint256 currentAllowance = allowance(account, msg.sender);
+        require(currentAllowance >= amount, "BEP20: burn amount exceeds allowance");
+        _approve(account, msg.sender, currentAllowance - amount);
         _burn(account, amount);
-    }
-
-    function burnFrom(address account, uint256 amount) public {
-      uint256 currentAllowance = allowance(account, msg.sender);
-      require(currentAllowance >= amount, "BEP20: burn amount exceeds allowance");
-      _approve(account, msg.sender, currentAllowance - amount);
-      burn(account, amount);
     }
 
     function deposit_reward(uint amount) public {
