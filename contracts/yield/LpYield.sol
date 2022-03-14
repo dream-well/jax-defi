@@ -101,11 +101,11 @@ contract LpYield is Initializable, JaxOwnable {
         router = IPancakeRouter01(_router);
         BUSD = _BUSD;
         WJAX = _WJAX;
-        require(IERC20(BUSD).approve(address(router), type(uint256).max), "BUSD pancake router approvement failed");
-        require(IERC20(WJAX).approve(address(router), type(uint256).max), "WJAX pancake router approvement failed");
+        require(IERC20(BUSD).approve(address(router), type(uint256).max), "BUSD pancake router approval failed");
+        require(IERC20(WJAX).approve(address(router), type(uint256).max), "WJAX pancake router approval failed");
 
         address lpToken = IPancakeFactory(router.factory()).getPair(WJAX, BUSD);
-        require(IERC20(lpToken).approve(address(router), type(uint256).max), "Pancake Lp token approvement failed");
+        require(IERC20(lpToken).approve(address(router), type(uint256).max), "Pancake Lp token approval failed");
 
         EpochInfo memory firstEpoch;
         firstEpoch.timestamp = block.timestamp;
@@ -148,7 +148,7 @@ contract LpYield is Initializable, JaxOwnable {
         WJAX = _WJAX;
         BUSD = _BUSD;
         address lpToken = IPancakeFactory(router.factory()).getPair(_WJAX, _BUSD);
-        require(IERC20(lpToken).approve(address(router), type(uint256).max), "Pancake Lp token approvement failed");
+        require(IERC20(lpToken).approve(address(router), type(uint256).max), "Pancake Lp token approval failed");
         emit Set_Token_Addresses(_WJAX, _BUSD);
     }
 

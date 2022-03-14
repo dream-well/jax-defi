@@ -42,7 +42,7 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         uint tokenLength = newYieldTokens.length;
         for (uint i=0; i < tokenLength; i++) {
             yieldTokens.push(newYieldTokens[i]);
-            require(IERC20(newYieldTokens[i]).approve(address(pancakeRouter), type(uint256).max), "yield token pancake router approvement failed");
+            require(IERC20(newYieldTokens[i]).approve(address(pancakeRouter), type(uint256).max), "yield token pancake router approval failed");
         }
         emit Set_Yield_Tokens(newYieldTokens);
     }
