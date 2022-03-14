@@ -115,8 +115,8 @@ contract WJAX is BEP20 {
 
   modifier onlyGateKeeper() {
     uint cnt = gateKeepers.length;
-    uint index;
-    for(index = 0; index < cnt; index += 1) {
+    uint index = 0;
+    for(; index < cnt; index += 1) {
       if(gateKeepers[index] == msg.sender)
         break;
     }
