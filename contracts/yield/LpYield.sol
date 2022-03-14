@@ -22,7 +22,7 @@ contract LpYield is Initializable, JaxOwnable {
         uint timestamp;
         uint blockCount;
         uint reward;
-        uint rewardPerShare; // 1e36
+        uint rewardPerShare; // 36 decimals
         uint rewardTokenPrice;
         uint totalRewardPerBalance;
     }
@@ -68,7 +68,7 @@ contract LpYield is Initializable, JaxOwnable {
     bool public checkFairPriceDeposit;
     bool public checkFairPriceWithdraw;
 
-    uint public liquidity_ratio_limit; //1e8
+    uint public liquidity_ratio_limit; // 8 decimals
 
     uint public busdDepositMin;
     uint public busdDepositMax;
@@ -89,17 +89,21 @@ contract LpYield is Initializable, JaxOwnable {
     event Set_Price_Impact_Limit(uint limit);
     event Deposit_Reward(uint amount);
     
-
+    modifier checkZeroAddress(address account) {
+        require(account != address(0x0), "Only non-zero address");
+        _;
+    }
+    
     function initialize (address admin_address, address _router, address _BUSD, address _WJAX) external initializer {
         jaxAdmin = IJaxAdmin(admin_address);
         router = IPancakeRouter01(_router);
         BUSD = _BUSD;
         WJAX = _WJAX;
-        IERC20(BUSD).approve(address(router), type(uint256).max);
-        IERC20(WJAX).approve(address(router), type(uint256).max);
+        require(IERC20(BUSD).approve(address(router), type(uint256).max), "BUSD pancake router approvement failed");
+        require(IERC20(WJAX).approve(address(router), type(uint256).max), "WJAX pancake router approvement failed");
 
         address lpToken = IPancakeFactory(router.factory()).getPair(WJAX, BUSD);
-        IERC20(lpToken).approve(address(router), type(uint256).max);
+        require(IERC20(lpToken).approve(address(router), type(uint256).max), "Pancake Lp token approvement failed");
 
         EpochInfo memory firstEpoch;
         firstEpoch.timestamp = block.timestamp;
@@ -134,19 +138,19 @@ contract LpYield is Initializable, JaxOwnable {
 
     function setJaxAdmin(address _jaxAdmin) public onlyAdmin {
         jaxAdmin = IJaxAdmin(_jaxAdmin);    
-        jaxAdmin.system_status();    
+        require(jaxAdmin.system_status() == 2, "Invalid jaxadmin status");
         emit Set_Jax_Admin(_jaxAdmin);
     }
     
-    function set_token_addresses(address _WJAX, address _BUSD) external onlyAdmin {
+    function set_token_addresses(address _WJAX, address _BUSD) external checkZeroAddress(_WJAX) checkZeroAddress(_BUSD) onlyAdmin {
         WJAX = _WJAX;
         BUSD = _BUSD;
         address lpToken = IPancakeFactory(router.factory()).getPair(_WJAX, _BUSD);
-        IERC20(lpToken).approve(address(router), type(uint256).max);
+        require(IERC20(lpToken).approve(address(router), type(uint256).max), "Pancake Lp token approvement failed");
         emit Set_Token_Addresses(_WJAX, _BUSD);
     }
 
-    function set_reward_token(address _rewardToken) external onlyGovernor {
+    function set_reward_token(address _rewardToken) external checkZeroAddress(_rewardToken) onlyGovernor {
         rewardToken = _rewardToken;
         emit Set_RewardToken(_rewardToken);
     }
@@ -277,7 +281,7 @@ contract LpYield is Initializable, JaxOwnable {
         emit Withdraw(msg.sender, amountBUSD, amount);
     }
 
-    function get_liquidity_ratio() public view returns(uint) { //1e8
+    function get_liquidity_ratio() public view returns(uint) { // 8 decimals
         address pairAddress = IPancakeFactory(router.factory()).getPair(BUSD, WJAX);
         (uint res0, uint res1,) = IPancakePair(pairAddress).getReserves();
         uint wjax_supply = IERC20(WJAX).totalSupply();

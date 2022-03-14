@@ -34,7 +34,7 @@ interface IJaxAdmin {
   function system_status() external view returns (uint);
 
   function blacklist(address _user) external view returns (bool);
-  function fee_blacklist(address _user) external view returns (bool);
+  function fee_freelist(address _user) external view returns (bool);
 } 
 
 /**
@@ -53,7 +53,7 @@ contract WJAX is BEP20 {
   // transaction fee wallet
   uint public referral_fee = 0;
   uint public referrer_amount_threshold = 0;
-  uint public cashback = 0; //1e8
+  uint public cashback = 0; // 8 decimals
   // transaction fee decimal 
   // uint public constant _fee_decimal = 8;
   
@@ -93,7 +93,6 @@ contract WJAX is BEP20 {
       uint8 decimals
   )
       BEP20(name, symbol)
-      payable
   {
       _setupDecimals(decimals);
       tx_fee_wallet = msg.sender;
@@ -117,7 +116,7 @@ contract WJAX is BEP20 {
   modifier onlyGateKeeper() {
     uint cnt = gateKeepers.length;
     uint index;
-    for(; index < cnt; index += 1) {
+    for(index = 0; index < cnt; index += 1) {
       if(gateKeepers[index] == msg.sender)
         break;
     }
@@ -139,7 +138,7 @@ contract WJAX is BEP20 {
   function setGateKeepers(address[] calldata _gateKeepers) external onlyAjaxPrime {
     uint cnt = _gateKeepers.length;
     delete gateKeepers;
-    for(uint index; index < cnt; index += 1) {
+    for(uint index = 0; index < cnt; index += 1) {
       gateKeepers.push(_gateKeepers[index]);
     }
     emit Set_Gate_Keepers(_gateKeepers);
@@ -154,6 +153,7 @@ contract WJAX is BEP20 {
 
   function setTransactionFee(uint tx_fee, uint tx_fee_cap, address wallet) external onlyJaxAdmin {
       require(tx_fee <= 1e8 * 3 / 100 , "Tx Fee percent can't be more than 3.");
+      require(wallet != address(0x0), "Only non-zero address");
       transaction_fee = tx_fee;
       transaction_fee_cap = tx_fee_cap;
       tx_fee_wallet = wallet;
@@ -175,7 +175,7 @@ contract WJAX is BEP20 {
     */
   function setCashback(uint cashback_percent) external onlyJaxAdmin {
       require(cashback_percent <= 1e8 * 30 / 100 , "Cashback percent can't be more than 30.");
-      cashback = cashback_percent; //1e8
+      cashback = cashback_percent; // 8 decimals
       emit Set_Cashback(cashback_percent);
   }
 
@@ -196,7 +196,7 @@ contract WJAX is BEP20 {
     require(!jaxAdmin.blacklist(sender), "sender is blacklisted");
     require(!jaxAdmin.blacklist(recipient), "recipient is blacklisted");
     if(amount == 0) return;
-    if(jaxAdmin.fee_blacklist(msg.sender) == true || jaxAdmin.fee_blacklist(recipient) == true) {
+    if(jaxAdmin.fee_freelist(msg.sender) == true || jaxAdmin.fee_freelist(recipient) == true) {
         return super._transfer(sender, recipient, amount);
     }
     if(referrers[sender] == address(0)) {

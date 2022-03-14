@@ -24,6 +24,9 @@ contract JaxAdmin is Initializable, JaxOwnable {
   using JaxLibrary for JaxAdmin;
 
   address public admin;
+  address public new_admin;
+  uint public new_admin_locktime;
+
   address public ajaxPrime;
 
   address public newGovernor;
@@ -44,10 +47,10 @@ contract JaxAdmin is Initializable, JaxOwnable {
   string public governor_policy_link;
 
   event Set_Blacklist(address[] accounts, bool flag);
-  event Set_Fee_Blacklist(address[] accounts, bool flag);
+  event Set_Fee_Freelist(address[] accounts, bool flag);
 
   mapping (address => bool) public blacklist;
-  mapping (address => bool) public fee_blacklist;
+  mapping (address => bool) public fee_freelist;
 
   uint public priceImpactLimit;
 
@@ -88,7 +91,8 @@ contract JaxAdmin is Initializable, JaxOwnable {
   mapping(address => bytes4[]) function_call_whitelist;
   mapping(uint => uint) last_call_timestamps;
 
-  event Set_Admin(address admin);
+  event Set_Admin(address newAdmin, uint newAdminLocktime);
+  event Update_Admin(address newAdmin);
   event Set_AjaxPrime(address ajaxPrime);
   event Set_Governor(address governor);
   event Set_Operators(address[] operator);
@@ -121,6 +125,11 @@ contract JaxAdmin is Initializable, JaxOwnable {
       _;
   }
 
+  modifier checkZeroAddress(address account) {
+    require(account != address(0x0), "Only non-zero address");
+    _;
+  }
+
   function userIsAdmin (address _user) public view returns (bool) {
     return admin == _user;
   }
@@ -137,10 +146,10 @@ contract JaxAdmin is Initializable, JaxOwnable {
     uint index;
     uint operatorCnt = operators.length;
     bytes4[] memory functions_whitelisted;
-    for(; index < operatorCnt; index += 1) {
+    for(index = 0; index < operatorCnt; index += 1) {
       if(operators[index] == _user){
         functions_whitelisted = function_call_whitelist[_user];
-        for(uint j; j < functions_whitelisted.length; j+=1) {
+        for(uint j = 0; j < functions_whitelisted.length; j+=1) {
           if(functions_whitelisted[j] == msg.sig)
             return true;
         }
@@ -182,11 +191,27 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   function setAdmin (address _admin ) external onlyAdmin {
-    admin = _admin;
-    emit Set_Admin(_admin);
+    if(_admin == address(0x0)){
+      admin = _admin;
+      emit Update_Admin(_admin);
+      return;
+    }
+    else {
+      new_admin = _admin;
+      new_admin_locktime = block.timestamp + 48 hours;
+    }
+    emit Set_Admin(_admin, new_admin_locktime);
   }
 
-  function setGovernor (address _governor) external onlyAjaxPrime {
+  function updateAdmin () external {
+    require(msg.sender == new_admin, "Only new admin");
+    require(block.timestamp >= new_admin_locktime, "Not unlocked yet");
+    admin = new_admin;
+    new_admin = address(0x0);
+    emit Update_Admin(new_admin);
+  }
+
+  function setGovernor (address _governor) external checkZeroAddress(_governor) onlyAjaxPrime {
     governor = _governor;
     emit Set_Governor(_governor);
   }
@@ -194,7 +219,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
   function setOperators (address[] calldata _operators) external onlyGovernor {
     uint operatorsCnt = _operators.length;
     delete operators;
-    for(uint index; index < operatorsCnt; index += 1 ) {
+    for(uint index = 0; index < operatorsCnt; index += 1 ) {
       operators.push(_operators[index]);
     }
     emit Set_Operators(_operators);
@@ -204,7 +229,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     bytes4[] storage whitelist = function_call_whitelist[operator];
     uint length = whitelist.length;
     uint i;
-    for(; i < length; i+=1 ) {
+    for(i = 0; i < length; i+=1 ) {
       whitelist.pop();
     }
     for(i = 0; i < functions.length; i+=1) {
@@ -216,20 +241,22 @@ contract JaxAdmin is Initializable, JaxOwnable {
   function electGovernor (address _governor) external {
     require(msg.sender == address(vrp), "Only VRP contract can perform this operation.");
     newGovernor = _governor;
-    governorStartDate = block.timestamp + 7 * 24 * 3600;
+    governorStartDate = block.timestamp + 7 days;
     emit Elect_Governor(_governor);
   }
 
-  function setAjaxPrime (address _ajaxPrime) external onlyAjaxPrime {
+  function setAjaxPrime (address _ajaxPrime) external checkZeroAddress(_ajaxPrime) onlyAjaxPrime {
     ajaxPrime = _ajaxPrime;
     emit Set_AjaxPrime(_ajaxPrime);
   }
 
-  function updateGovernor () external onlyAjaxPrime {
+  function updateGovernor () external {
     require(newGovernor != governor && newGovernor != address(0x0), "New governor hasn't been elected");
     require(governorStartDate >= block.timestamp, "New governor is not ready");
+    require(msg.sender == newGovernor, "You are not nominated as potential governor");
     address old_governor = governor;
     governor = newGovernor;
+    newGovernor = address(0x0);
     emit Update_Governor(old_governor, newGovernor);
   }
 
@@ -252,12 +279,12 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
 
-  function set_fee_blacklist(address[] calldata accounts, bool flag) external onlyAjaxPrime {
+  function set_fee_freelist(address[] calldata accounts, bool flag) external onlyAjaxPrime {
       uint length = accounts.length;
       for(uint i = 0; i < length; i++) {
-          fee_blacklist[accounts[i]] = flag;
+          fee_freelist[accounts[i]] = flag;
       }
-    emit Set_Fee_Blacklist(accounts, flag);
+    emit Set_Fee_Freelist(accounts, flag);
   }
 
   function set_blacklist(address[] calldata accounts, bool flag) external onlyGovernor {
@@ -281,13 +308,13 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   // ------ jaxSwap -----
-  function setJaxSwap(address _jaxSwap) public onlyAdmin {
+  function setJaxSwap(address _jaxSwap) public checkZeroAddress(_jaxSwap) onlyAdmin {
     jaxSwap = _jaxSwap;
     emit Set_Jax_Swap(_jaxSwap);
   }
 
   // ------ jaxPlanet -----
-  function setJaxPlanet(address _jaxPlanet) public onlyAdmin {
+  function setJaxPlanet(address _jaxPlanet) public checkZeroAddress(_jaxPlanet) onlyAdmin {
     jaxPlanet = _jaxPlanet;
     emit Set_Jax_Planet(_jaxPlanet);
   }
@@ -322,7 +349,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     jtoken.jusd_ratio = 0;
     uint jtoken_index;
     uint jtoken_count = jtoken_addresses.length;
-    for(; jtoken_index < jtoken_count; jtoken_index += 1){
+    for(jtoken_index = 0; jtoken_index < jtoken_count; jtoken_index += 1){
       if(jtoken_addresses[jtoken_index] == token)
       {
         if(jtoken_count > 1)
@@ -340,7 +367,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
            && newPrice >= oldPrice * (100 - percent) / 100;
   }
 
-  function set_jusd_jtoken_ratio(address token, uint jusd_ratio) external onlyOperator callLimit(uint(uint160(token)), 180) {
+  function set_jusd_jtoken_ratio(address token, uint jusd_ratio) external onlyOperator callLimit(uint(uint160(token)), 1 hours) {
     JToken storage jtoken = jtokens[token];
     uint old_ratio = jtoken.jusd_ratio;
     require(check_price_bound(old_ratio, jusd_ratio, 3), "Out of 3% ratio change");
@@ -358,14 +385,14 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Set_Use_Wjax_Usd_Dex_Pair(flag);
   }
 
-  function set_wjxn_usd_ratio(uint ratio) external onlyOperator callLimit(0x1, 180){
+  function set_wjxn_usd_ratio(uint ratio) external onlyOperator callLimit(0x1, 1 hours){
     require(wjxn_usd_ratio == 0 || check_price_bound(wjxn_usd_ratio, ratio, 10),
         "Out of 10% ratio change");
     wjxn_usd_ratio = ratio;
     emit Set_Wjxn_Usd_Ratio(ratio);
   }
 
-  function set_wjax_usd_ratio(uint ratio) external onlyOperator callLimit(0x2, 180) {
+  function set_wjax_usd_ratio(uint ratio) external onlyOperator callLimit(0x2, 1 hours) {
     require(wjax_usd_ratio == 0 || check_price_bound(wjax_usd_ratio, ratio, 5), 
       "Out of 5% ratio change");
     wjax_usd_ratio = ratio;
@@ -431,16 +458,18 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   function set_wjxn_wjax_collateralization_ratio(uint ratio) external onlyGovernor {
+    require(ratio >= 1e7 && ratio <= 2e8, "Ratio must be 10% - 200%");
     wjxn_wjax_collateralization_ratio = ratio;
     emit Set_Wjxn_Wjax_Collateralization_Ratio(ratio);
   }
 
   function set_wjax_collateralization_ratio(uint ratio) external onlyGovernor {
+    require(ratio >= 5e7 && ratio <= 1e8, "Ratio must be 50% - 100%");
     wjax_collateralization_ratio = ratio;
     emit Set_Wjax_Collateralization_Ratio(ratio);
   }
 
-  function set_wjax_jusd_markup_fee(uint _wjax_jusd_markup_fee, address _wallet) external onlyGovernor {
+  function set_wjax_jusd_markup_fee(uint _wjax_jusd_markup_fee, address _wallet) external checkZeroAddress(_wallet) onlyGovernor {
     require(_wjax_jusd_markup_fee <= 25 * 1e5, "Markup fee must be less than 2.5%");
     wjax_jusd_markup_fee = _wjax_jusd_markup_fee;
     wjax_jusd_markup_fee_wallet = _wallet;
@@ -490,13 +519,12 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
   
   function initialize(address pancakeRouter) public initializer {
-    address sender = msg.sender;
-    admin = sender;
-    governor = sender;
-    ajaxPrime = sender;
+    admin = msg.sender;
+    governor = msg.sender;
+    ajaxPrime = msg.sender;
     // System state
     system_status = 2;
-    owner = sender;
+    owner = msg.sender;
     router = IPancakeRouter01(pancakeRouter);
   }
 

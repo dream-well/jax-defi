@@ -54,7 +54,7 @@ contract Ubi is Initializable {
 
     address public majorAjaxPrimeNominee;
 
-    mapping(address => UserInfo) public userInfo;
+    mapping(address => UserInfo) userInfo;
     mapping(address => uint) public jaxCorpGovernorLimitInfo;
     address[] public jaxCorp_governors;
     mapping(uint => address) public idHashInfo;
@@ -73,10 +73,28 @@ contract Ubi is Initializable {
         jaxCorpGovernorLimitInfo[msg.sender] -= 1;
     }
 
+    function get_user_info(address account) external view returns(Status status, uint idHash, uint collectedReward, uint releasedReward, uint collect_count, uint release_count, string memory remarks) {
+        UserInfo memory user = userInfo[account];
+        status = user.status;
+        idHash = user.idHash;
+        collectedReward = user.collectedReward;
+        releasedReward = user.releasedReward;
+        collect_count = user.collects.length;
+        for(uint i = 0; i < user.collects.length; i += 1) {
+            if(user.collects[i].release_timestamp>0)
+                release_count += 1;
+        }
+        remarks = user.remarks;
+    }
+
+    function get_collect_info(address account) external view returns(CollectInfo[] memory) {
+        return userInfo[account].collects;
+    }
+
     function isJaxCorpGovernor(address jaxCorp_governor) public view returns (bool) {
         uint jaxCorp_governorCnt = jaxCorp_governors.length;
         uint index;
-        for(; index < jaxCorp_governorCnt; index += 1) {
+        for(index = 0; index < jaxCorp_governorCnt; index += 1) {
             if(jaxCorp_governors[index] == jaxCorp_governor){
                 return true;
             }
@@ -87,7 +105,7 @@ contract Ubi is Initializable {
     function setGovernors (address[] calldata _jaxCorp_governors) external onlyAjaxPrime {
         uint jaxCorp_governorsCnt = _jaxCorp_governors.length;
         delete jaxCorp_governors;
-        for(uint index; index < jaxCorp_governorsCnt; index += 1 ) {
+        for(uint index = 0; index < jaxCorp_governorsCnt; index += 1 ) {
             jaxCorp_governors.push(_jaxCorp_governors[index]);
         }
         emit Set_JaxCorp_Governors(_jaxCorp_governors);

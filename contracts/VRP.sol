@@ -218,6 +218,7 @@ contract VRP is IVRP, Initializable, JaxOwnable {
     }
 
     function set_reward_token(address _rewardToken) public onlyGovernor {
+        require(_rewardToken != address(0x0), "Only non-zero address");
         rewardToken = _rewardToken;
         emit Set_Reward_Token(_rewardToken);
     }

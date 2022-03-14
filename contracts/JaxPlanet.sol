@@ -69,14 +69,19 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
       _;
   }
 
+  modifier checkZeroAddress(address account) {
+    require(account != address(0x0), "Only non-zero address");
+    _;
+  }
+
   function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
     address oldAdmin = address(jaxAdmin);
     jaxAdmin = IJaxAdmin(newJaxAdmin);
-    jaxAdmin.system_status();
+    require(jaxAdmin.system_status() == 2, "Invalid Jax Admin status");
     emit Set_Jax_Admin(oldAdmin, newJaxAdmin);
   }
 
-  function setUbiTax(uint _ubi_tax, address wallet) external onlyAjaxPrime {
+  function setUbiTax(uint _ubi_tax, address wallet) external checkZeroAddress(wallet) onlyAjaxPrime {
       require(_ubi_tax <= 1e8 * 10 / 100 , "UBI tax can't be more than 10.");
       ubi_tax = _ubi_tax;
       ubi_tax_wallet = wallet;
@@ -128,7 +133,7 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
     emit Set_Colony_Address(msg.sender, colony);
   }
 
-  function setJaxCorpDAO(address jaxCorpDao_wallet, uint128 tx_tax, string memory policy_link, bytes32 policy_hash) external onlyAjaxPrime {
+  function setJaxCorpDAO(address jaxCorpDao_wallet, uint128 tx_tax, string memory policy_link, bytes32 policy_hash) external checkZeroAddress(jaxCorpDao_wallet) onlyAjaxPrime {
       require(tx_tax <= (1e8) * 20 / 100, "Tx tax can't be more than 20%");
       jaxcorp_dao_wallet = jaxCorpDao_wallet;
 

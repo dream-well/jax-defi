@@ -69,7 +69,7 @@ contract TxFeeWallet is Initializable, JaxOwnable {
             sumAllocPoint += yield.allocPoint;
             yieldInfo.push(yield);
             if(yield.isContract) {
-                IERC20(rewardToken).approve(yield.yield_address, type(uint).max);
+                require(IERC20(rewardToken).approve(yield.yield_address, type(uint).max), "reward token yield approvement failed)");
             }
         }
         require(sumAllocPoint == totalAllocPoint, "sum of alloc point should be 1000");
@@ -81,7 +81,7 @@ contract TxFeeWallet is Initializable, JaxOwnable {
         uint tokenLength = newYieldTokens.length;
         for (uint i=0; i < tokenLength; i++) {
             yieldTokens.push(newYieldTokens[i]);
-            IERC20(newYieldTokens[i]).approve(address(pancakeRouter), type(uint256).max);
+            require(IERC20(newYieldTokens[i]).approve(address(pancakeRouter), type(uint256).max), "yield token pancake router approvement failed");
         }
         emit Set_Yield_Tokens(newYieldTokens);
     }
@@ -120,13 +120,14 @@ contract TxFeeWallet is Initializable, JaxOwnable {
             if(amountIn == 0) {
                 continue;
             }
-            pancakeRouter.swapExactTokensForTokens(
+            uint[] memory amounts = pancakeRouter.swapExactTokensForTokens(
                 amountIn, 
                 0,
                 path,
                 address(this),
                 block.timestamp
             );
+            require(amounts[1] > 0, "PancakeRouter: Swapping tokens failed");
         }
         emit Swap_Tokens(yieldTokens);
     }

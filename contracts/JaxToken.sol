@@ -34,7 +34,7 @@ interface IJaxAdmin {
   function system_status() external view returns (uint);
 
   function blacklist(address _user) external view returns (bool);
-  function fee_blacklist(address _user) external view returns (bool);
+  function fee_freelist(address _user) external view returns (bool);
 } 
 
 /**
@@ -52,7 +52,7 @@ contract JaxToken is BEP20 {
   // transaction fee wallet
   uint public referral_fee = 0;
   uint public referrer_amount_threshold = 0;
-  uint public cashback = 0; //1e8
+  uint public cashback = 0; // 8 decimals
   // transaction fee decimal 
   // uint public constant _fee_decimal = 8;
 
@@ -83,7 +83,6 @@ contract JaxToken is BEP20 {
       uint8 decimals
   )
       BEP20(name, symbol)
-      payable
   {
       _setupDecimals(decimals);
       tx_fee_wallet = msg.sender;
@@ -117,6 +116,7 @@ contract JaxToken is BEP20 {
 
   function setTransactionFee(uint tx_fee, uint tx_fee_cap, address wallet) external onlyJaxAdmin {
       require(tx_fee <= 1e8 * 3 / 100 , "Tx Fee percent can't be more than 3.");
+      require(wallet != address(0x0), "Only non-zero address");
       transaction_fee = tx_fee;
       transaction_fee_cap = tx_fee_cap;
       tx_fee_wallet = wallet;
@@ -159,7 +159,7 @@ contract JaxToken is BEP20 {
     require(!jaxAdmin.blacklist(sender), "sender is blacklisted");
     require(!jaxAdmin.blacklist(recipient), "recipient is blacklisted");
     if(amount == 0) return;
-    if(jaxAdmin.fee_blacklist(msg.sender) == true || jaxAdmin.fee_blacklist(recipient) == true) {
+    if(jaxAdmin.fee_freelist(msg.sender) == true || jaxAdmin.fee_freelist(recipient) == true) {
         return super._transfer(sender, recipient, amount);
     }
     if(referrers[sender] == address(0)) {
