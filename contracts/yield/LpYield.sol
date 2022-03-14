@@ -115,6 +115,10 @@ contract LpYield is Initializable, JaxOwnable {
         lastEpochBlock = block.number;
 
         owner = msg.sender;
+
+        // Initialize state variables
+        totalLpAmount = 0;
+        totalBusdStaked = 0;
     }
     
     modifier onlyAdmin() {
