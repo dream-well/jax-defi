@@ -7,8 +7,8 @@ import "../interface/IERC20.sol";
 
 contract Ubi is Initializable {
 
-    event Set_Ajax_Prime(address newAjaxPrime, uint newAjaxPrimeLocktime);
-    event Update_Ajax_Prime(address newAjaxPrime);
+    event Set_Ajax_Prime(address newUbiAjaxPrime, uint newUbiAjaxPrimeLocktime);
+    event Update_Ajax_Prime(address newUbiAjaxPrime);
     event Set_Reward_Token(address rewardToken);
     event Register(address user);
     event Accept_User(address user, uint idHash, string remarks);
@@ -22,12 +22,12 @@ contract Ubi is Initializable {
     event Set_JaxCorp_Governors(address[] jaxCorp_governors);
     event Set_JaxCorp_Governor_Limit(address jaxCorp_governor, uint limit);
     event Set_Locktime(uint locktime);
-    event Set_Major_Ajax_Prime_Nominee(address ajaxPrimeNominee);
+    event Set_Major_Ajax_Prime_Nominee(address ubi_ajaxPrimeNominee);
     event Withdraw_By_Admin(address token, uint amount);
 
-    address public ajaxPrime;
-    address public new_ajaxPrime;
-    uint public new_ajaxPrime_locktime;
+    address public ubi_ajaxPrime;
+    address public new_ubi_ajaxPrime;
+    uint public new_ubi_ajaxPrime_locktime;
     address public rewardToken;
 
     enum Status { Init, Pending, Approved, Rejected }
@@ -56,17 +56,17 @@ contract Ubi is Initializable {
 
     uint public locktime;
 
-    address public majorAjaxPrimeNominee;
+    address public majorUbiAjaxPrimeNominee;
 
     mapping(address => UserInfo) userInfo;
     mapping(address => uint) public jaxCorpGovernorLimitInfo;
     address[] public jaxCorp_governors;
     mapping(uint => address) public idHashInfo;
     mapping(address => uint) public voteCountInfo;
-    mapping(address => address) public ajaxPrimeNomineeInfo;
+    mapping(address => address) public ubi_ajaxPrimeNomineeInfo;
 
-    modifier onlyAjaxPrime() {
-        require(msg.sender == ajaxPrime, "Only Ajax Prime");
+    modifier onlyUbiAjaxPrime() {
+        require(msg.sender == ubi_ajaxPrime, "Only Ubi Ajax Prime");
         _;
     }
 
@@ -113,7 +113,7 @@ contract Ubi is Initializable {
         return false;
     }
 
-    function setGovernors (address[] calldata _jaxCorp_governors) external onlyAjaxPrime {
+    function setGovernors (address[] calldata _jaxCorp_governors) external onlyUbiAjaxPrime {
         uint jaxCorp_governorsCnt = _jaxCorp_governors.length;
         delete jaxCorp_governors;
         for(uint index = 0; index < jaxCorp_governorsCnt; index += 1 ) {
@@ -122,17 +122,17 @@ contract Ubi is Initializable {
         emit Set_JaxCorp_Governors(_jaxCorp_governors);
     }
 
-    function setGovernorLimit(address jaxCorp_governor, uint limit) external onlyAjaxPrime {
+    function setGovernorLimit(address jaxCorp_governor, uint limit) external onlyUbiAjaxPrime {
         jaxCorpGovernorLimitInfo[jaxCorp_governor] = limit;
         emit Set_JaxCorp_Governor_Limit(jaxCorp_governor, limit);
     }
 
-    function set_reward_token(address _rewardToken) external checkZeroAddress(_rewardToken) onlyAjaxPrime {
+    function set_reward_token(address _rewardToken) external checkZeroAddress(_rewardToken) onlyUbiAjaxPrime {
         rewardToken = _rewardToken;
         emit Set_Reward_Token(_rewardToken);
     }
 
-    function set_minimum_reward_per_person(uint amount) external onlyAjaxPrime {
+    function set_minimum_reward_per_person(uint amount) external onlyUbiAjaxPrime {
         minimumRewardPerPerson = amount;
         emit Set_Minimum_Reward_Per_Person(amount);
     }
@@ -214,11 +214,11 @@ contract Ubi is Initializable {
         require(info.status != Status.Init, "User is not registered");
         if(info.status == Status.Approved) {
             userCount -= 1;
-            address ajaxPrimeNominee = ajaxPrimeNomineeInfo[user];
-            if(ajaxPrimeNomineeInfo[user] != address(0)) {
-                voteCountInfo[ajaxPrimeNominee] -= 1;
-                ajaxPrimeNomineeInfo[user] = address(0);
-                check_major_ajax_prime_nominee(ajaxPrimeNominee);
+            address ubi_ajaxPrimeNominee = ubi_ajaxPrimeNomineeInfo[user];
+            if(ubi_ajaxPrimeNomineeInfo[user] != address(0)) {
+                voteCountInfo[ubi_ajaxPrimeNominee] -= 1;
+                ubi_ajaxPrimeNomineeInfo[user] = address(0);
+                check_major_ubi_ajax_prime_nominee(ubi_ajaxPrimeNominee);
             }
         }
         info.status = Status.Rejected;
@@ -245,65 +245,65 @@ contract Ubi is Initializable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(address _ajaxPrime, address _rewardToken, uint _locktime) external initializer 
-     checkZeroAddress(_ajaxPrime) checkZeroAddress(_rewardToken)
+    function initialize(address _ubi_ajaxPrime, address _rewardToken, uint _locktime) external initializer 
+     checkZeroAddress(_ubi_ajaxPrime) checkZeroAddress(_rewardToken)
     {
-        ajaxPrime = _ajaxPrime;
+        ubi_ajaxPrime = _ubi_ajaxPrime;
         rewardToken = _rewardToken;
         locktime = _locktime;
     }
 
-    function set_ajax_prime(address newAjaxPrime) external onlyAjaxPrime {
-        if(newAjaxPrime == address(0x0)){
-            ajaxPrime = address(0x0);
-            new_ajaxPrime = address(0x0);
+    function set_ubi_ajax_prime(address newUbiAjaxPrime) external onlyUbiAjaxPrime {
+        if(newUbiAjaxPrime == address(0x0)){
+            ubi_ajaxPrime = address(0x0);
+            new_ubi_ajaxPrime = address(0x0);
             emit Update_Ajax_Prime(address(0x0));
             return;
         }
-        new_ajaxPrime = newAjaxPrime;
-        new_ajaxPrime_locktime = block.timestamp + 48 hours;
-        emit Set_Ajax_Prime(newAjaxPrime, new_ajaxPrime_locktime);
+        new_ubi_ajaxPrime = newUbiAjaxPrime;
+        new_ubi_ajaxPrime_locktime = block.timestamp + 48 hours;
+        emit Set_Ajax_Prime(newUbiAjaxPrime, new_ubi_ajaxPrime_locktime);
     }
 
-    function update_ajax_prime() external {
-        require(msg.sender == new_ajaxPrime, "Only new ajax prime");
-        require(block.timestamp >= new_ajaxPrime_locktime, "New ajax prime is not unlocked yet");
-        ajaxPrime = new_ajaxPrime;
-        new_ajaxPrime = address(0x0);
-        emit Update_Ajax_Prime(ajaxPrime);
+    function update_ubi_ajax_prime() external {
+        require(msg.sender == new_ubi_ajaxPrime, "Only new ajax prime");
+        require(block.timestamp >= new_ubi_ajaxPrime_locktime, "New ajax prime is not unlocked yet");
+        ubi_ajaxPrime = new_ubi_ajaxPrime;
+        new_ubi_ajaxPrime = address(0x0);
+        emit Update_Ajax_Prime(ubi_ajaxPrime);
     }
 
-    function set_ajax_prime_nominee(address ajaxPrimeNominee) external {
-        require(ajaxPrimeNominee != address(0), "AjaxPrimeNominee should not be zero address");
+    function set_ubi_ajax_prime_nominee(address ubi_ajaxPrimeNominee) external {
+        require(ubi_ajaxPrimeNominee != address(0), "UbiAjaxPrimeNominee should not be zero address");
         UserInfo memory info = userInfo[msg.sender];
         require(info.status == Status.Approved, "You are not approved");
-        address old_ajaxPrimeNominee = ajaxPrimeNomineeInfo[msg.sender];
-        require(old_ajaxPrimeNominee != ajaxPrimeNominee, "Voted already");
-        if(old_ajaxPrimeNominee != address(0)) {
-            voteCountInfo[old_ajaxPrimeNominee] -= 1;
+        address old_ubi_ajaxPrimeNominee = ubi_ajaxPrimeNomineeInfo[msg.sender];
+        require(old_ubi_ajaxPrimeNominee != ubi_ajaxPrimeNominee, "Voted already");
+        if(old_ubi_ajaxPrimeNominee != address(0)) {
+            voteCountInfo[old_ubi_ajaxPrimeNominee] -= 1;
         }
-        ajaxPrimeNomineeInfo[msg.sender] = ajaxPrimeNominee;
-        voteCountInfo[ajaxPrimeNominee] += 1;
-        check_major_ajax_prime_nominee(ajaxPrimeNominee);
+        ubi_ajaxPrimeNomineeInfo[msg.sender] = ubi_ajaxPrimeNominee;
+        voteCountInfo[ubi_ajaxPrimeNominee] += 1;
+        check_major_ubi_ajax_prime_nominee(ubi_ajaxPrimeNominee);
     }
 
-    function check_major_ajax_prime_nominee(address ajaxPrimeNominee) public {
-        if(voteCountInfo[ajaxPrimeNominee] > userCount / 2){
-            majorAjaxPrimeNominee = ajaxPrimeNominee;
-            emit Set_Major_Ajax_Prime_Nominee(ajaxPrimeNominee);
+    function check_major_ubi_ajax_prime_nominee(address ubi_ajaxPrimeNominee) public {
+        if(voteCountInfo[ubi_ajaxPrimeNominee] > userCount / 2){
+            majorUbiAjaxPrimeNominee = ubi_ajaxPrimeNominee;
+            emit Set_Major_Ajax_Prime_Nominee(ubi_ajaxPrimeNominee);
         }
-        else if(voteCountInfo[majorAjaxPrimeNominee] <= userCount / 2){
-            majorAjaxPrimeNominee = address(0);
+        else if(voteCountInfo[majorUbiAjaxPrimeNominee] <= userCount / 2){
+            majorUbiAjaxPrimeNominee = address(0);
             emit Set_Major_Ajax_Prime_Nominee(address(0));
         }
     }
 
-    function set_locktime(uint _locktime) external onlyAjaxPrime {
+    function set_locktime(uint _locktime) external onlyUbiAjaxPrime {
         locktime = _locktime;
         emit Set_Locktime(_locktime);
     }
 
-    function withdrawByAdmin(address token, uint amount) external onlyAjaxPrime {
+    function withdrawByAdmin(address token, uint amount) external onlyUbiAjaxPrime {
         IERC20(token).transfer(msg.sender, amount);
         emit Withdraw_By_Admin(token, amount);
     }
