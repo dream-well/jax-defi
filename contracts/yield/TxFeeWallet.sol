@@ -50,7 +50,6 @@ contract TxFeeWallet is Initializable, JaxOwnable {
         _;
     }
 
-    
     modifier checkZeroAddress(address account) {
         require(account != address(0x0), "Only non-zero address");
         _;
