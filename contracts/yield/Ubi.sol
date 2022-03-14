@@ -66,7 +66,7 @@ contract Ubi is Initializable {
     mapping(address => address) public ajaxPrimeNomineeInfo;
 
     modifier onlyAjaxPrime() {
-        require(msg.sender == ajaxPrime, "Only Admin");
+        require(msg.sender == ajaxPrime, "Only Ajax Prime");
         _;
     }
 
