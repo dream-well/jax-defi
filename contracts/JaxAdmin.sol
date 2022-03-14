@@ -28,6 +28,8 @@ contract JaxAdmin is Initializable, JaxOwnable {
   uint public new_admin_locktime;
 
   address public ajaxPrime;
+  address public new_ajaxPrime;
+  uint public new_ajaxPrime_locktime;
 
   address public newGovernor;
   address public governor;
@@ -93,7 +95,8 @@ contract JaxAdmin is Initializable, JaxOwnable {
 
   event Set_Admin(address newAdmin, uint newAdminLocktime);
   event Update_Admin(address newAdmin);
-  event Set_AjaxPrime(address ajaxPrime);
+  event Set_AjaxPrime(address ajaxPrime, uint newAjaxPrimeLocktime);
+  event Update_AjaxPrime(address newAjaxPrime);
   event Set_Governor(address governor);
   event Set_Operators(address[] operator);
   event Set_Jax_Swap(address jaxSwap);
@@ -246,8 +249,17 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   function setAjaxPrime (address _ajaxPrime) external checkZeroAddress(_ajaxPrime) onlyAjaxPrime {
-    ajaxPrime = _ajaxPrime;
-    emit Set_AjaxPrime(_ajaxPrime);
+    new_ajaxPrime = _ajaxPrime;
+    new_ajaxPrime_locktime = block.timestamp + 48 hours;
+    emit Set_AjaxPrime(_ajaxPrime, new_ajaxPrime_locktime);
+  }
+
+  function updateAjaxPrime () external {
+    require(msg.sender == new_ajaxPrime, "Only new ajax prime");
+    require(block.timestamp >= new_ajaxPrime_locktime, "New ajax prime is not unlocked yet");
+    ajaxPrime = new_ajaxPrime;
+    new_ajaxPrime = address(0x0);
+    emit Update_AjaxPrime(ajaxPrime);
   }
 
   function updateGovernor () external {
