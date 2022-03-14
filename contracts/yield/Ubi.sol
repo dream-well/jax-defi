@@ -73,6 +73,12 @@ contract Ubi is Initializable {
         jaxCorpGovernorLimitInfo[msg.sender] -= 1;
     }
 
+    
+  modifier checkZeroAddress(address account) {
+    require(account != address(0x0), "Only non-zero address");
+    _;
+  }
+
     function get_user_info(address account) external view returns(Status status, uint idHash, uint collectedReward, uint releasedReward, uint collect_count, uint release_count, address jaxCorp_governor, string memory remarks) {
         UserInfo memory user = userInfo[account];
         status = user.status;
@@ -117,7 +123,7 @@ contract Ubi is Initializable {
         emit Set_JaxCorp_Governor_Limit(jaxCorp_governor, limit);
     }
 
-    function set_reward_token(address _rewardToken) external onlyAjaxPrime {
+    function set_reward_token(address _rewardToken) external checkZeroAddress(_rewardToken) onlyAjaxPrime {
         rewardToken = _rewardToken;
         emit Set_Reward_Token(_rewardToken);
     }
@@ -235,13 +241,15 @@ contract Ubi is Initializable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(address _ajaxPrime, address _rewardToken, uint _locktime) external initializer {
+    function initialize(address _ajaxPrime, address _rewardToken, uint _locktime) external initializer 
+     checkZeroAddress(_ajaxPrime) checkZeroAddress(_rewardToken)
+    {
         ajaxPrime = _ajaxPrime;
         rewardToken = _rewardToken;
         locktime = _locktime;
     }
 
-    function set_ajax_prime(address newAjaxPrime) external onlyAjaxPrime {
+    function set_ajax_prime(address newAjaxPrime) external checkZeroAddress(newAjaxPrime) onlyAjaxPrime {
         address oldAjaxPrime = ajaxPrime;
         ajaxPrime = newAjaxPrime;
         emit Set_Ajax_Prime(oldAjaxPrime, newAjaxPrime);
