@@ -54,19 +54,9 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
     _;
   }
 
-  modifier onlyGovernor() {
-    require(jaxAdmin.userIsGovernor(msg.sender), "Not_Governor"); //Only Governor can perform this operation.
-    _;
-  }
-
   modifier onlyAjaxPrime() {
     require(jaxAdmin.userIsAjaxPrime(msg.sender) || msg.sender == owner, "Not_AjaxPrime"); //Only AjaxPrime can perform this operation.
     _;
-  }
-
-  modifier isActive() {
-      require(jaxAdmin.system_status() == 2, "Swap_Paused"); //Swap has been paused by Admin.
-      _;
   }
 
   modifier checkZeroAddress(address account) {
