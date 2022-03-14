@@ -14,6 +14,7 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
     event Set_Yield_Tokens(address[] tokens);
     event Set_Reward_Token(address rewardToken);
     event Swap_Tokens(address[] tokens);
+    event Withdraw_By_Admin(address token, uint amount);
 
     address[] public yieldTokens;
 
@@ -86,6 +87,7 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
 
     function withdrawByAdmin(address token, uint amount) external onlyAdmin {
         IERC20(token).transfer(msg.sender, amount);
+        emit Withdraw_By_Admin(token, amount);
     }
 
     function setJaxAdmin(address newJaxAdmin) external onlyAdmin {

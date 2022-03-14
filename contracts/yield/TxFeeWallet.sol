@@ -20,6 +20,7 @@ contract TxFeeWallet is Initializable, JaxOwnable {
     event Set_Yield_Info(YieldInfo[] info);
     event Pay_Yield();    
     event Swap_Tokens(address[] tokens);
+    event Withdraw_By_Admin(address token, uint amount);
 
     struct YieldInfo {
         uint allocPoint; // How many allocation points assigned to this yield
@@ -141,6 +142,7 @@ contract TxFeeWallet is Initializable, JaxOwnable {
 
     function withdrawByAdmin(address token, uint amount) external onlyAdmin {
         IERC20(token).transfer(msg.sender, amount);
+        emit Withdraw_By_Admin(token, amount);
     }
 
     function setJaxAdmin(address newJaxAdmin) external onlyAdmin {

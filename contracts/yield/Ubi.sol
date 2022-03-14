@@ -7,7 +7,8 @@ import "../interface/IERC20.sol";
 
 contract Ubi is Initializable {
 
-    event Set_Ajax_Prime(address oldAjaxPrime, address newAjaxPrime);
+    event Set_Ajax_Prime(address newAjaxPrime, uint newAjaxPrimeLocktime);
+    event Update_Ajax_Prime(address newAjaxPrime);
     event Set_Reward_Token(address rewardToken);
     event Register(address user);
     event Accept_User(address user, uint idHash, string remarks);
@@ -22,8 +23,11 @@ contract Ubi is Initializable {
     event Set_JaxCorp_Governor_Limit(address jaxCorp_governor, uint limit);
     event Set_Locktime(uint locktime);
     event Set_Major_Ajax_Prime_Nominee(address ajaxPrimeNominee);
+    event Withdraw_By_Admin(address token, uint amount);
 
     address public ajaxPrime;
+    address public new_ajaxPrime;
+    uint public new_ajaxPrime_locktime;
     address public rewardToken;
 
     enum Status { Init, Pending, Approved, Rejected }
@@ -249,10 +253,24 @@ contract Ubi is Initializable {
         locktime = _locktime;
     }
 
-    function set_ajax_prime(address newAjaxPrime) external checkZeroAddress(newAjaxPrime) onlyAjaxPrime {
-        address oldAjaxPrime = ajaxPrime;
-        ajaxPrime = newAjaxPrime;
-        emit Set_Ajax_Prime(oldAjaxPrime, newAjaxPrime);
+    function set_ajax_prime(address newAjaxPrime) external onlyAjaxPrime {
+        if(newAjaxPrime == address(0x0)){
+            ajaxPrime = address(0x0);
+            new_ajaxPrime = address(0x0);
+            emit Update_Ajax_Prime(address(0x0));
+            return;
+        }
+        new_ajaxPrime = newAjaxPrime;
+        new_ajaxPrime_locktime = block.timestamp + 48 hours;
+        emit Set_Ajax_Prime(newAjaxPrime, new_ajaxPrime_locktime);
+    }
+
+    function update_ajax_prime() external {
+        require(msg.sender == new_ajaxPrime, "Only new ajax prime");
+        require(block.timestamp >= new_ajaxPrime_locktime, "New ajax prime is not unlocked yet");
+        ajaxPrime = new_ajaxPrime;
+        new_ajaxPrime = address(0x0);
+        emit Update_Ajax_Prime(ajaxPrime);
     }
 
     function set_ajax_prime_nominee(address ajaxPrimeNominee) external {
@@ -287,5 +305,6 @@ contract Ubi is Initializable {
 
     function withdrawByAdmin(address token, uint amount) external onlyAjaxPrime {
         IERC20(token).transfer(msg.sender, amount);
+        emit Withdraw_By_Admin(token, amount);
     }
 }

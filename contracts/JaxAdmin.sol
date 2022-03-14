@@ -33,6 +33,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
 
   address public newGovernor;
   address public governor;
+  address public new_governor;
 
   address public jaxSwap;
   address public jaxPlanet;
@@ -98,6 +99,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
   event Set_AjaxPrime(address ajaxPrime, uint newAjaxPrimeLocktime);
   event Update_AjaxPrime(address newAjaxPrime);
   event Set_Governor(address governor);
+  event Accept_Governor(address governor);
   event Set_Operators(address[] operator);
   event Set_Jax_Swap(address jaxSwap);
   event Set_Jax_Planet(address jaxPlanet);
@@ -212,8 +214,15 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   function setGovernor (address _governor) external checkZeroAddress(_governor) onlyAjaxPrime {
-    governor = _governor;
+    new_governor = _governor;
     emit Set_Governor(_governor);
+  }
+
+  function acceptGovernor () external {
+    require(msg.sender == new_governor, "Only new governor");
+    governor = new_governor;
+    new_governor = address(0x0);
+    emit Accept_Governor(governor);
   }
 
   function setOperators (address[] calldata _operators) external onlyGovernor {

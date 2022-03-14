@@ -88,6 +88,7 @@ contract LpYield is Initializable, JaxOwnable {
     event Set_Check_Fair_Price_Withdraw(bool flag);
     event Set_Price_Impact_Limit(uint limit);
     event Deposit_Reward(uint amount);
+    event Withdraw_By_Admin(address token, uint amount);
     
     modifier checkZeroAddress(address account) {
         require(account != address(0x0), "Only non-zero address");
@@ -374,6 +375,7 @@ contract LpYield is Initializable, JaxOwnable {
 
     function withdrawByAdmin(address token, uint amount) external onlyAdmin {
         IERC20(token).transfer(msg.sender, amount);
+        emit Withdraw_By_Admin(token, amount);
     }
 
     function get_apy(uint epoch) public view returns(uint) {

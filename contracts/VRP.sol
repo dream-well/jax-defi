@@ -30,6 +30,7 @@ interface IVRP {
     event Set_Reward_Token(address rewardToken);
     event Harvest(address account, uint amount);
     event Deposit_Reward(uint amount);
+    event Withdraw_By_Admin(address token, uint amount);
 }
 
 /**
@@ -314,6 +315,7 @@ contract VRP is IVRP, Initializable, JaxOwnable {
 
     function withdrawByAdmin(address token, uint amount) external onlyAdmin {
         IERC20(token).transfer(msg.sender, amount);
+        emit Withdraw_By_Admin(token, amount);
     }
 
     function get_apy(uint epoch) public view returns(uint) {
