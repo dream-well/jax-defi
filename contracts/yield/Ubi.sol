@@ -73,13 +73,14 @@ contract Ubi is Initializable {
         jaxCorpGovernorLimitInfo[msg.sender] -= 1;
     }
 
-    function get_user_info(address account) external view returns(Status status, uint idHash, uint collectedReward, uint releasedReward, uint collect_count, uint release_count, string memory remarks) {
+    function get_user_info(address account) external view returns(Status status, uint idHash, uint collectedReward, uint releasedReward, uint collect_count, uint release_count, address jaxCorp_governor, string memory remarks) {
         UserInfo memory user = userInfo[account];
         status = user.status;
         idHash = user.idHash;
         collectedReward = user.collectedReward;
         releasedReward = user.releasedReward;
         collect_count = user.collects.length;
+        jaxCorp_governor = user.jaxCorp_governor;
         for(uint i = 0; i < user.collects.length; i += 1) {
             if(user.collects[i].release_timestamp>0)
                 release_count += 1;
@@ -225,9 +226,9 @@ contract Ubi is Initializable {
     }
 
     function register() external {
-        UserInfo storage info = userInfo[msg.sender];
+        UserInfo memory info = userInfo[msg.sender];
         require(info.status == Status.Init, "You already registered");
-        userInfo[msg.sender].status = Status.Pending;
+        info.status = Status.Pending;
         emit Register(msg.sender);
     }
 
@@ -248,7 +249,7 @@ contract Ubi is Initializable {
 
     function set_ajax_prime_nominee(address ajaxPrimeNominee) external {
         require(ajaxPrimeNominee != address(0), "AjaxPrimeNominee should not be zero address");
-        UserInfo storage info = userInfo[msg.sender];
+        UserInfo memory info = userInfo[msg.sender];
         require(info.status == Status.Approved, "You are not approved");
         address old_ajaxPrimeNominee = ajaxPrimeNomineeInfo[msg.sender];
         require(old_ajaxPrimeNominee != ajaxPrimeNominee, "Voted already");
