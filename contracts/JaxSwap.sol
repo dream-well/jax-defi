@@ -90,7 +90,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     assembly {
         size := extcodesize(addr)
     }
-    require((msg.sender == tx.origin),
+    require((msg.sender == tx.origin && size == 0),
           "Contract_Call_Not_Allowed"); //Only non-contract/eoa can perform this operation
     _;
   }
