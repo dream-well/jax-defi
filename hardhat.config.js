@@ -38,7 +38,7 @@ module.exports = {
       accounts: [deployerWalletPrivateKey],
     },
     bsctestnet: {
-      url: "https://data-seed-prebsc-2-s3.binance.org:8545/",
+      url: "https://speedy-nodes-nyc.moralis.io/cb02b6b8ff2cdd26f1db08a4/bsc/testnet",
       chainId: 97,
       accounts: [deployerWalletPrivateKey],
       

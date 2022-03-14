@@ -94,7 +94,9 @@ contract LpYield is Initializable, JaxOwnable {
         _;
     }
     
-    function initialize (address admin_address, address _router, address _BUSD, address _WJAX) external initializer {
+    function initialize (address admin_address, address _router, address _BUSD, address _WJAX) external initializer
+        checkZeroAddress(admin_address) checkZeroAddress(_router) checkZeroAddress(_BUSD) checkZeroAddress(_WJAX)
+    {
         jaxAdmin = IJaxAdmin(admin_address);
         router = IPancakeRouter01(_router);
         BUSD = _BUSD;

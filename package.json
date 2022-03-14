@@ -14,7 +14,7 @@
     "@nomiclabs/hardhat-etherscan": "^2.1.8",
     "@openzeppelin/contracts": "^4.3.2",
     "@openzeppelin/contracts-upgradeable": "^4.3.2",
-    "@openzeppelin/hardhat-upgrades": "^1.10.0",
+    "@openzeppelin/hardhat-upgrades": "^1.13.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "buidler": "^0.2.8",
     "chai": "^4.3.4",

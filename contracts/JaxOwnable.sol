@@ -22,10 +22,11 @@ contract JaxOwnable {
     emit Set_New_Owner(newOwner, new_owner_locktime);
   }
 
-  function updateOwner(address newOwner) external onlyOwner {
-    require(newOwner != address(0), "new owner is the zero address");
+  function updateOwner() external {
+    require(msg.sender == new_owner, "Only new owner");
     require(block.timestamp >= new_owner_locktime, "New admin is not unlocked yet");
-    _transferOwnership(newOwner);
+    _transferOwnership(new_owner);
+    new_owner = address(0x0);
   }
 
   function renounceOwnership() external onlyOwner {
