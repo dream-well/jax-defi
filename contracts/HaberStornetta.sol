@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.11;
 
-import "./interface/IJaxAdmin.sol";
 import "./lib/BEP20.sol";
 
 contract HaberStornetta is BEP20 {

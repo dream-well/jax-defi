@@ -103,11 +103,6 @@ contract WJAX is BEP20 {
     _;
   }
 
-  modifier onlyAdmin() {
-    require(jaxAdmin.userIsAdmin(msg.sender) || msg.sender == owner(), "Only Admin");
-    _;
-  }
-
   modifier onlyAjaxPrime() {
     require(jaxAdmin.userIsAjaxPrime(msg.sender) || msg.sender == owner(), "Only AjaxPrime can perform this operation.");
     _;

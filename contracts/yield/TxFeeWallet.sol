@@ -50,10 +50,18 @@ contract TxFeeWallet is Initializable, JaxOwnable {
         _;
     }
 
+    
+    modifier checkZeroAddress(address account) {
+        require(account != address(0x0), "Only non-zero address");
+        _;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(address _admin_address, address _pancakeRouter, address _rewardToken) public initializer {
+    function initialize(address _admin_address, address _pancakeRouter, address _rewardToken) public initializer 
+        checkZeroAddress(_admin_address) checkZeroAddress(_pancakeRouter) checkZeroAddress(_rewardToken)
+    {
         jaxAdmin = IJaxAdmin(_admin_address);
         pancakeRouter = IPancakeRouter01(_pancakeRouter); // 0x9ac64cc6e4415144c455bd8e4837fea55603e5c3
         rewardToken = _rewardToken;
@@ -86,7 +94,7 @@ contract TxFeeWallet is Initializable, JaxOwnable {
         emit Set_Yield_Tokens(newYieldTokens);
     }
 
-    function set_reward_token(address _rewardToken) public onlyGovernor {
+    function set_reward_token(address _rewardToken) public checkZeroAddress(_rewardToken) onlyGovernor {
         rewardToken = _rewardToken;
         emit Set_Reward_Token(_rewardToken);
     }
