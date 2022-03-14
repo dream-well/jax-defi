@@ -123,11 +123,6 @@ contract JaxAdmin is Initializable, JaxOwnable {
   event Set_Whitelist_For_Operator(address operator, bytes4[] functions);
   event Delete_JToken(address jtoken);
 
-  modifier isActive() {
-      require(system_status == 2, "Exchange has been paused by Admin.");
-      _;
-  }
-
   modifier checkZeroAddress(address account) {
     require(account != address(0x0), "Only non-zero address");
     _;
