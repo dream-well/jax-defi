@@ -60,29 +60,37 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         emit Set_Reward_Token(_rewardToken);
     }
 
-    function swap_tokens() public onlyAjaxPrime {
+    function swap_tokens(uint slippage) public onlyAjaxPrime {
         uint tokenCount = yieldTokens.length;
-        address yieldToken;
-        address[] memory path = new address[](2);
-        uint amountIn;
         for(uint i = 0; i < tokenCount; i++) {
-            yieldToken = yieldTokens[i];
-            path[0] = yieldToken;
-            path[1] = rewardToken;
-            amountIn = IERC20(yieldToken).balanceOf(address(this));
-            if(amountIn == 0) {
-                continue;
-            }
-            uint[] memory amounts = pancakeRouter.swapExactTokensForTokens(
-                amountIn, 
-                0,
-                path,
-                address(this),
-                block.timestamp
-            );
-            require(amounts[1] > 0, "PancakeRouter: Swapping tokens failed");
+            _swap_specific_token(i, 0, slippage);
         }
         emit Swap_Tokens(yieldTokens);
+    }
+
+    function _swap_specific_token(uint tokenId, uint amountIn, uint slippage) public returns(uint){
+        require(tokenId < yieldTokens.length, "Invalid token id");
+        if(amountIn == 0) {
+            amountIn = IERC20(yieldTokens[tokenId]).balanceOf(address(this));
+        }
+        address yieldToken = yieldTokens[tokenId];
+        address[] memory path;
+        path[0] = yieldToken;
+        path[1] = rewardToken;
+        require(amountIn <= IERC20(yieldToken).balanceOf(address(this)), "Insufficient yield token in this contract");
+        uint[] memory amounts = pancakeRouter.swapExactTokensForTokens(
+            amountIn, 
+            get_amount_out_min(amountIn, path, slippage),
+            path,
+            address(this),
+            block.timestamp
+        );
+        return amounts[1];
+    }
+
+    function get_amount_out_min(uint amountIn, address[] memory path, uint slippage) internal view returns(uint) {
+        uint[] memory amounts = pancakeRouter.getAmountsOut(amountIn, path);
+        return amounts[1] * (1e8 - slippage) / 1e8;
     }
 
     function withdrawByAdmin(address token, uint amount) external onlyAjaxPrime {
