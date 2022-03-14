@@ -93,7 +93,7 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
     function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
         address oldJaxAdmin = address(jaxAdmin);
         jaxAdmin = IJaxAdmin(newJaxAdmin);
-        jaxAdmin.system_status();
+        require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
         emit Set_Jax_Admin(oldJaxAdmin, newJaxAdmin);
     }
 }
