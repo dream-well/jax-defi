@@ -154,8 +154,8 @@ contract TxFeeWallet is Initializable, JaxOwnable {
     }
 
     function get_amount_out_min(uint amountIn, address[] memory path, uint slippage) internal view returns(uint) {
-        uint[] memory amounts = pancakeRouter.getAmountsOut(amountIn, path);
-        return amounts[1] * (1e8 - slippage) / 1e8;
+        uint[] memory amounts = pancakeRouter.getAmountsOut(1, path);
+        return amounts[1] * amountIn * (1e8 - slippage) / 1e8;
     }
 
     function withdrawByAdmin(address token, uint amount) external onlyAdmin {
