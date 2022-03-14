@@ -23,8 +23,8 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
 
     IPancakeRouter01 public pancakeRouter;
 
-    modifier onlyAdmin() {
-        require(jaxAdmin.userIsAjaxPrime(msg.sender) || msg.sender == owner, "Only Admin can perform this operation.");
+    modifier onlyAjaxPrime() {
+        require(jaxAdmin.userIsAjaxPrime(msg.sender) || msg.sender == owner, "Only AjaxPrime can perform this operation.");
         _;
     }
 
@@ -45,7 +45,7 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         owner = msg.sender;
     }
 
-    function set_yield_tokens(address[] calldata newYieldTokens) public onlyAdmin {
+    function set_yield_tokens(address[] calldata newYieldTokens) public onlyAjaxPrime {
         delete yieldTokens;
         uint tokenLength = newYieldTokens.length;
         for (uint i=0; i < tokenLength; i++) {
@@ -55,12 +55,12 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         emit Set_Yield_Tokens(newYieldTokens);
     }
 
-    function set_reward_token(address _rewardToken) public checkZeroAddress(_rewardToken) onlyAdmin {
+    function set_reward_token(address _rewardToken) public checkZeroAddress(_rewardToken) onlyAjaxPrime {
         rewardToken = _rewardToken;
         emit Set_Reward_Token(_rewardToken);
     }
 
-    function swap_tokens() public onlyAdmin {
+    function swap_tokens() public onlyAjaxPrime {
         uint tokenCount = yieldTokens.length;
         address yieldToken;
         address[] memory path = new address[](2);
@@ -85,12 +85,12 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         emit Swap_Tokens(yieldTokens);
     }
 
-    function withdrawByAdmin(address token, uint amount) external onlyAdmin {
+    function withdrawByAdmin(address token, uint amount) external onlyAjaxPrime {
         IERC20(token).transfer(msg.sender, amount);
         emit Withdraw_By_Admin(token, amount);
     }
 
-    function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
+    function setJaxAdmin(address newJaxAdmin) external onlyAjaxPrime {
         address oldJaxAdmin = address(jaxAdmin);
         jaxAdmin = IJaxAdmin(newJaxAdmin);
         require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
