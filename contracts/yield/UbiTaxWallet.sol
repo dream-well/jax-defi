@@ -63,12 +63,19 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
     function swap_tokens(uint slippage) public onlyAjaxPrime {
         uint tokenCount = yieldTokens.length;
         for(uint i = 0; i < tokenCount; i++) {
-            _swap_specific_token(i, 0, slippage);
+            uint amountIn = IERC20(yieldTokens[i]).balanceOf(address(this));
+            if(amountIn == 0) continue;
+            _swap_specific_token(i, amountIn, slippage);
         }
         emit Swap_Tokens(yieldTokens);
     }
 
-    function _swap_specific_token(uint tokenId, uint amountIn, uint slippage) public returns(uint){
+
+    function swap_specific_token(uint tokenId, uint amountIn, uint slippage) external onlyAjaxPrime returns(uint){
+        return _swap_specific_token(tokenId, amountIn, slippage);
+    }
+
+    function _swap_specific_token(uint tokenId, uint amountIn, uint slippage) internal returns(uint){
         require(tokenId < yieldTokens.length, "Invalid token id");
         if(amountIn == 0) {
             amountIn = IERC20(yieldTokens[tokenId]).balanceOf(address(this));
