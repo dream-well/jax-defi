@@ -38,8 +38,8 @@ interface IJaxAdmin {
 } 
 
 /**
-* @title JaxToken
-* @dev Implementation of the JaxToken. Extension of {BEP20} that adds a fee transaction behaviour.
+* @title WJAX
+* @dev Implementation of the WJAX. Extension of {BEP20} that adds a fee transaction behaviour.
 */
 contract WJAX is BEP20 {
   

@@ -133,7 +133,7 @@ contract JaxToken is BEP20 {
     */
   function setCashback(uint cashback_percent) external onlyJaxAdmin {
       require(cashback_percent <= 1e8 * 30 / 100 , "Cashback percent can't be more than 30.");
-      cashback = cashback_percent; //1e8
+      cashback = cashback_percent; // 8 decimals
       emit Set_Cashback(cashback_percent);
   }
 
