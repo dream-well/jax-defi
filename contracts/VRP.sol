@@ -34,8 +34,8 @@ interface IVRP {
 }
 
 /**
- * @title VRP
- * @dev Implementation of the VRP
+ * @title WJAX
+ * @dev Implementation of the WJAX
  */
 //, Initializable
 contract VRP is IVRP, Initializable, JaxOwnable {
@@ -118,7 +118,7 @@ contract VRP is IVRP, Initializable, JaxOwnable {
 
     function setJaxAdmin(address _jaxAdmin) public onlyAdmin {
         jaxAdmin = IJaxAdmin(_jaxAdmin);    
-        jaxAdmin.system_status();    
+        require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
         emit Set_Jax_Admin(_jaxAdmin);
     }
     
