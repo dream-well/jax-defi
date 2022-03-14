@@ -144,16 +144,6 @@ contract VRP is IVRP, Initializable, JaxOwnable {
       burn(account, amount);
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
-        revert("transfer is not allowed");
-        return false;
-    }
-
-    function transfer(address recipient, uint256 amount) public returns (bool) {
-        revert("transfer is not allowed");
-        return false;
-    }
-
     function deposit_reward(uint amount) public {
         require(jaxAdmin.userIsGovernor(tx.origin), "tx.origin should be governor");
         uint epochShare = (block.number - lastEpochBlock) * totalSupply() + epochSharePlus - epochShareMinus;
@@ -320,10 +310,6 @@ contract VRP is IVRP, Initializable, JaxOwnable {
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
-    }
-
-    function _setupDecimals(uint8 decimals_) internal {
-        _decimals = decimals_;
     }
 
     function withdrawByAdmin(address token, uint amount) external onlyAdmin {

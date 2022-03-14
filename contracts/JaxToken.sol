@@ -93,11 +93,6 @@ contract JaxToken is BEP20 {
     _;
   }
 
-  modifier onlyAdmin() {
-    require(jaxAdmin.userIsAdmin(msg.sender) || msg.sender == owner(), "Only Admin");
-    _;
-  }
-
   modifier onlyJaxSwap() {
   require(msg.sender == jaxAdmin.jaxSwap(), "Only JaxSwap can perform this operation.");
     _;
