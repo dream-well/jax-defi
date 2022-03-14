@@ -226,7 +226,7 @@ contract Ubi is Initializable {
     }
 
     function register() external {
-        UserInfo memory info = userInfo[msg.sender];
+        UserInfo storage info = userInfo[msg.sender];
         require(info.status == Status.Init, "You already registered");
         info.status = Status.Pending;
         emit Register(msg.sender);
