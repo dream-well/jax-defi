@@ -94,7 +94,7 @@ contract BEP20 is Ownable, IBEP20 {
         emit Transfer(sender, recipient, amount);
     }
 
-    function mint(address account, uint256 amount) public {
+    function mint(address account, uint256 amount) public virtual {
         _mint(account, amount);
     }
 

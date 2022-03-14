@@ -255,14 +255,14 @@ contract JaxToken is BEP20 {
     }
   }
 
-  function _mint(address account, uint amount) internal override(BEP20) notFrozen onlyJaxSwap {
+  function mint(address account, uint amount) public override(BEP20) notFrozen onlyJaxSwap {
       require(!jaxAdmin.blacklist(account), "account is blacklisted");
-      super._mint(account, amount);
+      _mint(account, amount);
   }
 
-  function _burn(address account, uint amount) internal override(BEP20) notFrozen onlyJaxSwap {
+  function burnFrom(address account, uint amount) public override(BEP20) notFrozen onlyJaxSwap {
     require(!jaxAdmin.blacklist(account), "account is blacklisted");
-    super._burn(account, amount);
+    super.burnFrom(account, amount);
   }
 
 }

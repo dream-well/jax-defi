@@ -292,7 +292,7 @@ contract WJAX is BEP20 {
     }
   }
 
-  function _mint(address account, uint amount) internal override(BEP20) notFrozen onlyGateKeeper {
+  function mint(address account, uint amount) public override(BEP20) notFrozen onlyGateKeeper {
     require(!jaxAdmin.blacklist(account), "account is blacklisted");
     GateKeeper storage gateKeeper = gateKeeperInfo[msg.sender];
     require(gateKeeper.mintLimit >= amount, "Mint amount exceeds limit");
@@ -300,11 +300,11 @@ contract WJAX is BEP20 {
     gateKeeper.mintLimit -= amount;
   }
 
-  function _burn(address account, uint amount) internal override(BEP20) notFrozen onlyGateKeeper {
+  function burnFrom(address account, uint amount) public override(BEP20) notFrozen onlyGateKeeper {
     require(!jaxAdmin.blacklist(account), "account is blacklisted");
     GateKeeper storage gateKeeper = gateKeeperInfo[msg.sender];
     require(gateKeeper.burnLimit >= amount, "Burn amount exceeds limit");
-    super._burn(account, amount);
+    super.burnFrom(account, amount);
     gateKeeper.burnLimit -= amount;
   }
 
