@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require("hardhat");
 
-const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3"; // bsctestnet
+const pancakeRouterAddr = "0x10ED43C718714eb63d5aA57B78B54704E256024E"; // binance smart chain mainnet
 
 void async function main() {
 

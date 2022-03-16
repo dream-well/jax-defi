@@ -20,6 +20,7 @@ contract Ubi is Initializable {
     event Deposit_Reward(uint amount);
     event Set_Minimum_Reward_Per_Person(uint amount);
     event Set_JaxCorp_Governors(address[] jaxCorp_governors);
+    event Set_AjaxPrime_Delegates(address[] jaxCorp_governors);
     event Set_JaxCorp_Governor_Limit(address jaxCorp_governor, uint limit);
     event Set_Locktime(uint locktime);
     event Set_Major_Ajax_Prime_Nominee(address ubi_ajaxPrimeNominee);
@@ -61,6 +62,7 @@ contract Ubi is Initializable {
     mapping(address => UserInfo) userInfo;
     mapping(address => uint) public jaxCorpGovernorLimitInfo;
     address[] public jaxCorp_governors;
+    address[] public ajaxPrime_delegates;
     mapping(uint => address) public idHashInfo;
     mapping(address => uint) public voteCountInfo;
     mapping(address => address) public ubi_ajaxPrimeNomineeInfo;
@@ -71,12 +73,15 @@ contract Ubi is Initializable {
     }
 
     modifier onlyJaxCorpGovernor() {
-        require(isJaxCorpGovernor(msg.sender), "Only Governor");
+        if(isAjaxPrimeDelegate(msg.sender)) {
+            _;
+            return;
+        }
+        require(isJaxCorpGovernor(msg.sender), "Only Governor or Ajax Prime Delegate");
         require(jaxCorpGovernorLimitInfo[msg.sender] > 0, "Operating limit reached");
         _;
         jaxCorpGovernorLimitInfo[msg.sender] -= 1;
     }
-
     
   modifier checkZeroAddress(address account) {
     require(account != address(0x0), "Only non-zero address");
@@ -120,6 +125,26 @@ contract Ubi is Initializable {
             jaxCorp_governors.push(_jaxCorp_governors[index]);
         }
         emit Set_JaxCorp_Governors(_jaxCorp_governors);
+    }
+
+    function setAjaxPrimeDelegates (address[] calldata _delegates) external onlyUbiAjaxPrime {
+        uint count = _delegates.length;
+        delete ajaxPrime_delegates;
+        for(uint index = 0; index < count; index += 1 ) {
+            ajaxPrime_delegates.push(_delegates[index]);
+        }
+        emit Set_AjaxPrime_Delegates(_delegates);
+    }
+
+    function isAjaxPrimeDelegate(address delegate) public view returns (bool) {
+        uint count = ajaxPrime_delegates.length;
+        uint index = 0;
+        for(index; index < count; index += 1) {
+            if(ajaxPrime_delegates[index] == delegate){
+                return true;
+            }
+        }
+        return false;
     }
 
     function setGovernorLimit(address jaxCorp_governor, uint limit) external onlyUbiAjaxPrime {
