@@ -34,8 +34,8 @@ interface IVRP {
 }
 
 /**
- * @title WJAX
- * @dev Implementation of the WJAX
+ * @title VRP
+ * @dev Implementation of the VRP
  */
 //, Initializable
 contract VRP is IVRP, Initializable, JaxOwnable {
