@@ -243,7 +243,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Set_Governor(_governor);
   }
 
-  function acceptGovernor () external {
+  function acceptGovernorship () external {
     require(msg.sender == new_governor_by_ajaxprime, "Only new governor");
     governor = new_governor_by_ajaxprime;
     new_governor_by_ajaxprime = address(0x0);
@@ -368,7 +368,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Set_Jax_Planet(_jaxPlanet);
   }
 
-  function setTokenAddresses(address _busd, address _wjxn, address _wjax, address _vrp, address _jusd) public onlyAdmin {
+  function setTokenAddresses(address _busd, address _wjxn, address _wjax, address _vrp, address _jusd) public checkZeroAddress(_vrp) onlyAdmin {
     busd = IERC20(_busd);
     wjxn = IERC20(_wjxn);
     wjax = IERC20(_wjax);
@@ -452,10 +452,10 @@ contract JaxAdmin is Initializable, JaxOwnable {
     if( wjax.balanceOf(jaxSwap) == 0 ) return 1e8;
     if( wjxn.balanceOf(jaxSwap) == 0 ) return 0;
     return 1e8 * ((10 ** wjax.decimals()) * (wjxn.balanceOf(jaxSwap) - withdrawal_amount) 
-        * get_wjxn_jusd_ratio()) / (wjax.balanceOf(jaxSwap) * get_wjax_jusd_ratio());
+        * get_wjxn_usd_ratio()) / (wjax.balanceOf(jaxSwap) * get_wjax_usd_ratio());
   }
   
-  function get_wjxn_jusd_ratio() public view returns (uint){
+  function get_wjxn_usd_ratio() public view returns (uint){
     
     // Using manual ratio.
     if( use_wjxn_usd_dex_pair == 0 ) {
@@ -488,7 +488,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     return (vrp_wjxn_ratio);
   }
 
-  function get_wjax_jusd_ratio() public view returns (uint){
+  function get_wjax_usd_ratio() public view returns (uint){
     // Using manual ratio.
     if( use_wjax_usd_dex_pair == 0 ) {
         return wjax_usd_ratio;
@@ -498,7 +498,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   function get_jusd_wjax_ratio() public view returns (uint){
-    return 1e8 * 1e8 / get_wjax_jusd_ratio();
+    return 1e8 * 1e8 / get_wjax_usd_ratio();
   }
 
   function set_freeze_vrp_wjxn_swap(uint flag) external onlyGovernor {
@@ -535,7 +535,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
   function show_reserves() public view returns(uint, uint, uint){
     uint wjax_reserves = wjax.balanceOf(jaxSwap);
 
-    uint wjax_usd_value = wjax_reserves * get_wjax_jusd_ratio() * (10 ** jusd.decimals()) / 1e8 / (10 ** wjax.decimals());
+    uint wjax_usd_value = wjax_reserves * get_wjax_usd_ratio() * (10 ** jusd.decimals()) / 1e8 / (10 ** wjax.decimals());
     uint lsc_usd_value = jusd.totalSupply();
 
     uint jtoken_count = jtoken_addresses.length;

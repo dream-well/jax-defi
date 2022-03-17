@@ -21,7 +21,8 @@ library JaxLibrary {
       reserveOut = res0;
     }
     uint amountOut = pancakeRouter.getAmountOut(amountIn, reserveIn, reserveOut);
-    require((reserveOut * 1e18 / reserveIn) * (1e8 - limit) / 1e8 <= amountOut * 1e18 / amountIn, "Price Impact too high");
+    uint price = (reserveOut * 1e18 / reserveIn);
+    require(price * (1e8 - limit) / 1e8 <= amountOut * 1e18 / amountIn, "Price Impact too high");
     return pancakeRouter.swapExactTokensForTokens(amountIn, 0, path, to, block.timestamp);
   }
 }
