@@ -44,7 +44,7 @@ interface IJaxAdmin {
   function get_vrp_wjxn_ratio() external view returns (uint);
   function wjxn_wjax_collateralization_ratio() external view returns (uint);
   function wjax_collateralization_ratio() external view returns (uint);
-  function get_wjax_jusd_ratio() external view returns (uint);
+  function get_wjax_usd_ratio() external view returns (uint);
   function freeze_vrp_wjxn_swap() external view returns (uint);
   function jtokens(address jtoken_address) external view returns (uint jusd_ratio, uint markup_fee, address markup_fee_wallet, string memory name);
   
@@ -209,7 +209,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     wjax.transferFrom(from, jaxAdmin.wjax_jusd_markup_fee_wallet(), fee_amount);
     wjax.transferFrom(from, address(this), amountIn - fee_amount);
 
-    amountOut = (amountIn - fee_amount) * jaxAdmin.get_wjax_jusd_ratio() * (10 ** jusd.decimals()) / (10 ** wjax.decimals()) / 1e8;
+    amountOut = (amountIn - fee_amount) * jaxAdmin.get_wjax_usd_ratio() * (10 ** jusd.decimals()) / (10 ** wjax.decimals()) / 1e8;
 
     jusd.mint(to, amountOut);
 		emit Swap_WJAX_JUSD(from, to, amountIn, amountOut);
@@ -222,7 +222,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
   function _swap_jusd_wjax(address from, address to, uint amountIn) internal returns(uint amountOut) {
     require(jusd.balanceOf(from) >= amountIn, "Insufficient jusd");
     uint fee_amount = amountIn * jaxAdmin.wjax_jusd_markup_fee() / 1e8;
-    amountOut = (amountIn - fee_amount) * 1e8 * (10 ** wjax.decimals()) / jaxAdmin.get_wjax_jusd_ratio() / (10 ** jusd.decimals());
+    amountOut = (amountIn - fee_amount) * 1e8 * (10 ** wjax.decimals()) / jaxAdmin.get_wjax_usd_ratio() / (10 ** jusd.decimals());
 		require(wjax.balanceOf(address(this)) >= amountOut, "Insufficient reserves");
     jusd.burnFrom(from, amountIn);
     jusd.mint(jaxAdmin.wjax_jusd_markup_fee_wallet(), fee_amount);
@@ -277,7 +277,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
 
   function _swap_jusd_busd(address from, address to, uint amountIn) internal returns(uint amountOut) {
     uint fee_amount = amountIn * jaxAdmin.wjax_jusd_markup_fee() / 1e8;
-    uint wjax_amount = (amountIn - fee_amount) * 1e8 * (10 ** wjax.decimals()) / jaxAdmin.get_wjax_jusd_ratio() / (10 ** jusd.decimals());
+    uint wjax_amount = (amountIn - fee_amount) * 1e8 * (10 ** wjax.decimals()) / jaxAdmin.get_wjax_usd_ratio() / (10 ** jusd.decimals());
     
     require(wjax.balanceOf(address(this)) >= wjax_amount, "Insufficient WJAX fund");
     require(jusd.balanceOf(from) >= amountIn, "Insufficient JUSD");
@@ -311,7 +311,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     uint wjax_fee = amounts[1] * jaxAdmin.wjax_jusd_markup_fee() / 1e8;
     // markup fee wallet will receive fee
     wjax.transfer(jaxAdmin.wjax_jusd_markup_fee_wallet(), wjax_fee);
-    amountOut = (amounts[1] - wjax_fee) * jaxAdmin.get_wjax_jusd_ratio() * (10 ** jusd.decimals()) / (10 ** wjax.decimals()) / 1e8;
+    amountOut = (amounts[1] - wjax_fee) * jaxAdmin.get_wjax_usd_ratio() * (10 ** jusd.decimals()) / (10 ** wjax.decimals()) / 1e8;
     jusd.mint(to, amountOut);
 		emit Swap_BUSD_JUSD(from, to, amountIn, amountOut);
   }

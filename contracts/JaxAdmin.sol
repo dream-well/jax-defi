@@ -368,7 +368,9 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Set_Jax_Planet(_jaxPlanet);
   }
 
-  function setTokenAddresses(address _busd, address _wjxn, address _wjax, address _vrp, address _jusd) public checkZeroAddress(_vrp) onlyAdmin {
+  function setTokenAddresses(address _busd, address _wjxn, address _wjax, address _vrp, address _jusd) public onlyAdmin 
+     checkZeroAddress(_busd) checkZeroAddress(_wjxn) checkZeroAddress(_wjax) checkZeroAddress(_vrp) checkZeroAddress(_jusd)
+  {
     busd = IERC20(_busd);
     wjxn = IERC20(_wjxn);
     wjax = IERC20(_wjax);
@@ -497,7 +499,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     return getPrice(address(wjax), address(busd));
   }
 
-  function get_jusd_wjax_ratio() public view returns (uint){
+  function get_usd_wjax_ratio() public view returns (uint){
     return 1e8 * 1e8 / get_wjax_usd_ratio();
   }
 
