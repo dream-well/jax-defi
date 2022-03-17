@@ -286,7 +286,7 @@ contract Ubi is Initializable {
             return;
         }
         new_ubi_ajaxPrime = newUbiAjaxPrime;
-        new_ubi_ajaxPrime_locktime = block.timestamp + 48 hours;
+        new_ubi_ajaxPrime_locktime = block.timestamp + 10 minutes;
         emit Set_Ajax_Prime(newUbiAjaxPrime, new_ubi_ajaxPrime_locktime);
     }
 

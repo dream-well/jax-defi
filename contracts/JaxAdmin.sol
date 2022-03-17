@@ -94,6 +94,14 @@ contract JaxAdmin is Initializable, JaxOwnable {
   mapping(address => bytes4[]) function_call_whitelist;
   mapping(uint => uint) last_call_timestamps;
 
+  struct RunProtection {
+    bytes32 data_hash;
+    uint request_timestamp;
+    bool executed;
+  }
+
+  mapping(bytes4 => RunProtection) run_protection_info;
+
   event Set_Admin(address newAdmin, uint newAdminLocktime);
   event Update_Admin(address newAdmin);
   event Set_AjaxPrime(address ajaxPrime, uint newAjaxPrimeLocktime);
@@ -124,10 +132,27 @@ contract JaxAdmin is Initializable, JaxOwnable {
   event Set_Jusd_Jtoken_Ratio(address jtoken, uint old_ratio, uint new_ratio);
   event Set_Whitelist_For_Operator(address operator, bytes4[] functions);
   event Delete_JToken(address jtoken);
+  event Request_Update(bytes4 sig, bytes data);
 
   modifier checkZeroAddress(address account) {
     require(account != address(0x0), "Only non-zero address");
     _;
+  }
+
+  modifier runProtection() {
+    RunProtection storage protection = run_protection_info[msg.sig];
+    bytes32 data_hash = keccak256(msg.data);
+    if(data_hash != protection.data_hash) {
+      protection.data_hash = keccak256(msg.data);
+      protection.request_timestamp = block.timestamp;
+      protection.executed = false;
+      emit Request_Update(msg.sig, msg.data);
+      return;
+    }
+    require(protection.executed == false, "Already executed");
+    require(block.timestamp >= protection.request_timestamp + 1 seconds, "Running is Locked");
+    _;
+    protection.executed = true;
   }
 
   function userIsAdmin (address _user) public view returns (bool) {
@@ -200,7 +225,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     }
     else {
       new_admin = _admin;
-      new_admin_locktime = block.timestamp + 48 hours;
+      new_admin_locktime = block.timestamp + 10 minutes;
     }
     emit Set_Admin(_admin, new_admin_locktime);
   }
@@ -262,7 +287,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
       return;
     }
     new_ajaxPrime = _ajaxPrime;
-    new_ajaxPrime_locktime = block.timestamp + 48 hours;
+    new_ajaxPrime_locktime = block.timestamp + 10 minutes;
     emit Set_AjaxPrime(_ajaxPrime, new_ajaxPrime_locktime);
   }
 
@@ -332,7 +357,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   // ------ jaxSwap -----
-  function setJaxSwap(address _jaxSwap) public checkZeroAddress(_jaxSwap) onlyAdmin {
+  function setJaxSwap(address _jaxSwap) public checkZeroAddress(_jaxSwap) onlyAdmin runProtection {
     jaxSwap = _jaxSwap;
     emit Set_Jax_Swap(_jaxSwap);
   }

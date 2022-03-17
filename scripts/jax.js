@@ -1,6 +1,7 @@
+const util = require('util');
 const { ethers, upgrades } = require("hardhat");
-
-const pancakeRouterAddr = "0x10ED43C718714eb63d5aA57B78B54704E256024E"; // binance smart chain mainnet
+const timer = util.promisify(setTimeout)
+const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3"; // binance smart chain mainnet
 
 void async function main() {
 
@@ -76,6 +77,8 @@ void async function main() {
     await jaxSwap.deployed();
     console.log("JaxSwap");
     await jaxAdmin.setJaxSwap(jaxSwap.address);
+    await timer(1000);
+    await jaxAdmin.setJaxSwap(jaxSwap.address);
 
     console.log("setJaxSwap");
     // await wjax.setJaxSwap(owner.address);
@@ -95,7 +98,7 @@ void async function main() {
     
 
     console.log("mint");
-    await jaxAdmin.setJaxSwap(jaxSwap.address);
+    // await jaxAdmin.setJaxSwap(jaxSwap.address);
 
     console.log("setJaxSwap ---- end");
     await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address);
@@ -146,7 +149,7 @@ void async function main() {
 
     const Ubi = await ethers.getContractFactory("Ubi");
     ubi = await upgrades.deployProxy(Ubi, 
-        [owner.address, wjax.address], 
+        [owner.address, wjax.address, 300], 
         { initializer: 'initialize' });
   }
 
