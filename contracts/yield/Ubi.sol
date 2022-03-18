@@ -217,19 +217,20 @@ contract Ubi is Initializable {
         _release_collect(msg.sender, collect_id);
     }
 
-    function approveUser(address user, uint idHash, uint bonus, string calldata remarks) external onlyJaxCorpGovernor {
+    function approveUser(address user, uint idHash, uint advance, string calldata remarks) external onlyJaxCorpGovernor {
         UserInfo storage info = userInfo[user];
         require(info.status != Status.Init, "User is not registered");
         require(info.status != Status.Approved, "Already approved");
         require(idHashInfo[idHash] == address(0), "Id hash should be unique");
+        require(advance <= 10 * (10 ** IERC20(rewardToken).decimals()), "Max 10 advance");
         userCount += 1;
-        info.harvestedReward = totalRewardPerPerson + bonus;
+        info.harvestedReward = totalRewardPerPerson + advance;
         info.idHash = idHash;
         info.remarks = remarks;
         info.jaxCorp_governor = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
-        emit Accept_User(user, idHash, bonus, remarks);
+        emit Accept_User(user, idHash, advance, remarks);
     }
 
     function rejectUser(address user, string calldata remarks) external onlyJaxCorpGovernor {
