@@ -150,7 +150,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
       return;
     }
     require(protection.executed == false, "Already executed");
-    require(block.timestamp >= protection.request_timestamp + 1 seconds, "Running is Locked");
+    require(block.timestamp >= protection.request_timestamp + 1 minutes, "Running is Locked");
     _;
     protection.executed = true;
   }

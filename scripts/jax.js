@@ -77,7 +77,7 @@ void async function main() {
     await jaxSwap.deployed();
     console.log("JaxSwap");
     await jaxAdmin.setJaxSwap(jaxSwap.address);
-    await timer(1000);
+    await timer(61000);
     await jaxAdmin.setJaxSwap(jaxSwap.address);
 
     console.log("setJaxSwap");
