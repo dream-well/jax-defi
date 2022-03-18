@@ -11,7 +11,7 @@ contract Ubi is Initializable {
     event Update_Ajax_Prime(address newUbiAjaxPrime);
     event Set_Reward_Token(address rewardToken);
     event Register(address user);
-    event Accept_User(address user, uint idHash, string remarks);
+    event Accept_User(address user, uint idHash, uint bonus, string remarks);
     event Reject_User(address user, string remarks);
     event Change_My_JaxCorp_Governor(address jaxCorp_governor);
     event Collect_UBI(address indexed user, uint collect_id, uint amount);
@@ -174,8 +174,8 @@ contract Ubi is Initializable {
     function collect_ubi() external {
         UserInfo storage info = userInfo[msg.sender];
         require(info.status == Status.Approved, "You are not approved");
+        require(totalRewardPerPerson > info.harvestedReward, "Nothing to harvest");
         uint reward = totalRewardPerPerson - info.harvestedReward;
-        require(reward > 0, "Nothing to harvest");
         info.harvestedReward = totalRewardPerPerson;
         info.collectedReward += reward;
         CollectInfo memory collect;
@@ -217,21 +217,19 @@ contract Ubi is Initializable {
         _release_collect(msg.sender, collect_id);
     }
 
-    function approveUser(address user, uint idHash, string calldata remarks) external onlyJaxCorpGovernor {
+    function approveUser(address user, uint idHash, uint bonus, string calldata remarks) external onlyJaxCorpGovernor {
         UserInfo storage info = userInfo[user];
         require(info.status != Status.Init, "User is not registered");
         require(info.status != Status.Approved, "Already approved");
         require(idHashInfo[idHash] == address(0), "Id hash should be unique");
-        if(info.status != Status.Approved) {
-            userCount += 1;
-            info.harvestedReward = totalRewardPerPerson;
-        }
+        userCount += 1;
+        info.harvestedReward = totalRewardPerPerson + bonus;
         info.idHash = idHash;
         info.remarks = remarks;
         info.jaxCorp_governor = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
-        emit Accept_User(user, idHash, remarks);
+        emit Accept_User(user, idHash, bonus, remarks);
     }
 
     function rejectUser(address user, string calldata remarks) external onlyJaxCorpGovernor {
