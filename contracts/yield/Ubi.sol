@@ -224,6 +224,7 @@ contract Ubi is Initializable {
         require(info.status != Status.Init, "User is not registered");
         require(info.status != Status.Approved, "Already approved");
         require(idHashInfo[idHash] == address(0), "Id hash should be unique");
+        require(advance <= 10 * (10 ** IERC20(rewardToken).decimals()), "Max 10 advance");
         require(advance <= jaxCorpGovernorAdvanceLimitInfo[msg.sender], "Out of advance limit");
         jaxCorpGovernorAdvanceLimitInfo[msg.sender] -= advance;
         userCount += 1;
