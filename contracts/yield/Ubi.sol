@@ -61,6 +61,7 @@ contract Ubi is Initializable {
 
     mapping(address => UserInfo) userInfo;
     mapping(address => uint) public jaxCorpGovernorLimitInfo;
+    mapping(address => uint) public jaxCorpGovernorAdvanceLimitInfo;
     address[] public jaxCorp_governors;
     address[] public ajaxPrime_delegates;
     mapping(uint => address) public idHashInfo;
@@ -147,8 +148,9 @@ contract Ubi is Initializable {
         return false;
     }
 
-    function setGovernorLimit(address jaxCorp_governor, uint limit) external onlyUbiAjaxPrime {
+    function setGovernorLimit(address jaxCorp_governor, uint limit, uint advance_limit) external onlyUbiAjaxPrime {
         jaxCorpGovernorLimitInfo[jaxCorp_governor] = limit;
+        jaxCorpGovernorAdvanceLimitInfo[jaxCorp_governor] = advance_limit;
         emit Set_JaxCorp_Governor_Limit(jaxCorp_governor, limit);
     }
 
@@ -222,7 +224,8 @@ contract Ubi is Initializable {
         require(info.status != Status.Init, "User is not registered");
         require(info.status != Status.Approved, "Already approved");
         require(idHashInfo[idHash] == address(0), "Id hash should be unique");
-        require(advance <= 10 * (10 ** IERC20(rewardToken).decimals()), "Max 10 advance");
+        require(advance <= jaxCorpGovernorAdvanceLimitInfo[msg.sender], "Out of advance limit");
+        jaxCorpGovernorAdvanceLimitInfo[msg.sender] -= advance;
         userCount += 1;
         info.harvestedReward = totalRewardPerPerson + advance;
         info.idHash = idHash;
@@ -230,6 +233,7 @@ contract Ubi is Initializable {
         info.jaxCorp_governor = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
+        IERC20(rewardToken).transfer(user, advance);
         emit Accept_User(user, idHash, advance, remarks);
     }
 
