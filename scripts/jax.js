@@ -3,6 +3,10 @@ const { ethers, upgrades } = require("hardhat");
 const timer = util.promisify(setTimeout)
 const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3"; // binance smart chain mainnet
 
+async function wait() {
+  await timer(6100);
+}
+
 void async function main() {
 
   const [owner] = await ethers.getSigners();
@@ -64,8 +68,15 @@ void async function main() {
     await wjax.setJaxAdmin(jaxAdmin.address);
     await jusd.setJaxAdmin(jaxAdmin.address);
     await vrp.setJaxAdmin(jaxAdmin.address);
-
     await jinr.setJaxAdmin(jaxAdmin.address);
+
+    await wait();
+
+    await wjax.setJaxAdmin(jaxAdmin.address);
+    await jusd.setJaxAdmin(jaxAdmin.address);
+    await vrp.setJaxAdmin(jaxAdmin.address);
+    await jinr.setJaxAdmin(jaxAdmin.address);
+
 
     
   }
@@ -77,7 +88,7 @@ void async function main() {
     await jaxSwap.deployed();
     console.log("JaxSwap");
     await jaxAdmin.setJaxSwap(jaxSwap.address);
-    await timer(61000);
+    await wait();
     await jaxAdmin.setJaxSwap(jaxSwap.address);
 
     console.log("setJaxSwap");
@@ -104,6 +115,14 @@ void async function main() {
     await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address);
 
     console.log("setTokenAddresses");
+
+    await wait();
+
+    console.log("setGateKeepers");
+    await wjax.setGateKeepers([owner.address]);
+    await wjax.setMintBurnLimit(owner.address, amount, amount);
+    await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address);
+
   }
 
   async function createLiquidity() {
@@ -143,6 +162,9 @@ void async function main() {
     const JaxPlanet = await ethers.getContractFactory("JaxPlanet");
     jaxPlanet = await upgrades.deployProxy(JaxPlanet, [jaxAdmin.address], { initializer: 'initialize'});
     jaxAdmin.setJaxPlanet(jaxPlanet.address);
+    await wait();
+    jaxAdmin.setJaxPlanet(jaxPlanet.address);
+    
   }
 
   async function deployUbi() {

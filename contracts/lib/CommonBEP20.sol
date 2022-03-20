@@ -21,7 +21,7 @@ contract CommonBEP20 is BEP20 {
         _setupDecimals(decimals);
     }
 
-    function _mint(address account, uint256 amount) internal override(BEP20) onlyOwner {
+    function mint(address account, uint256 amount) public onlyOwner {
         super._mint(account, amount);
     }
 
