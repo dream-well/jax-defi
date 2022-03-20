@@ -13,12 +13,12 @@ contract HaberStornetta is BEP20 {
         WJXN = IBEP20(_WJXN);
     }
 
-    function fromWJXN(uint256 amountIn) public {
+    function mint(uint256 amountIn) public {
         WJXN.transferFrom(msg.sender, address(this), amountIn);
         _mint(msg.sender, amountIn * 1e8);
     }
 
-    function toWJXN(uint256 amountOut) public {
+    function burn(uint256 amountOut) public override {
         _burn(msg.sender, amountOut * 1e8);
         WJXN.transfer(msg.sender, amountOut);
     }

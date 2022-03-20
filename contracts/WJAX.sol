@@ -292,7 +292,7 @@ contract WJAX is BEP20 {
     }
   }
 
-  function mint(address account, uint amount) public override(BEP20) notFrozen onlyGateKeeper {
+  function mint(address account, uint amount) public notFrozen onlyGateKeeper {
     require(!jaxAdmin.blacklist(account), "account is blacklisted");
     GateKeeper storage gateKeeper = gateKeeperInfo[msg.sender];
     require(gateKeeper.mintLimit >= amount, "Mint amount exceeds limit");
