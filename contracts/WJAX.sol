@@ -4,6 +4,7 @@ pragma solidity 0.8.11;
 
 import "./lib/BEP20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./JaxProtection.sol";
 
 
 interface IJaxPlanet {
@@ -41,7 +42,7 @@ interface IJaxAdmin {
 * @title WJAX
 * @dev Implementation of the WJAX. Extension of {BEP20} that adds a fee transaction behaviour.
 */
-contract WJAX is BEP20 {
+contract WJAX is BEP20, JaxProtection {
   
   IJaxAdmin public jaxAdmin;
   address[] public gateKeepers;
@@ -130,7 +131,7 @@ contract WJAX is BEP20 {
     emit Set_Jax_Admin(_jaxAdmin);
   }
 
-  function setGateKeepers(address[] calldata _gateKeepers) external onlyAjaxPrime {
+  function setGateKeepers(address[] calldata _gateKeepers) external onlyAjaxPrime runProtection {
     uint cnt = _gateKeepers.length;
     delete gateKeepers;
     for(uint index = 0; index < cnt; index += 1) {
@@ -139,7 +140,7 @@ contract WJAX is BEP20 {
     emit Set_Gate_Keepers(_gateKeepers);
   }
 
-  function setMintBurnLimit(address gateKeeper, uint mintLimit, uint burnLimit) external onlyAjaxPrime {
+  function setMintBurnLimit(address gateKeeper, uint mintLimit, uint burnLimit) external onlyAjaxPrime runProtection {
     GateKeeper storage info = gateKeeperInfo[gateKeeper];
     info.mintLimit = mintLimit;
     info.burnLimit = burnLimit;

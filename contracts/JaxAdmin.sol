@@ -8,6 +8,7 @@ import "./interface/IPancakeRouter.sol";
 import "./interface/IERC20.sol";
 import "./JaxOwnable.sol";
 import "./JaxLibrary.sol";
+import "./JaxProtection.sol";
 
 interface IJaxSwap {
   function setTokenAddresses(address _busd, address _wjxn, address _wjax, address _vrp, address _jusd) external;
@@ -19,7 +20,7 @@ interface IJaxToken {
   function setCashback(uint cashback_percent) external;
 }
 
-contract JaxAdmin is Initializable, JaxOwnable {
+contract JaxAdmin is Initializable, JaxOwnable, JaxProtection {
 
   using JaxLibrary for JaxAdmin;
 
@@ -94,14 +95,6 @@ contract JaxAdmin is Initializable, JaxOwnable {
   mapping(address => bytes4[]) function_call_whitelist;
   mapping(uint => uint) last_call_timestamps;
 
-  struct RunProtection {
-    bytes32 data_hash;
-    uint8 request_timestamp;
-    address sender;
-    bool executed;
-  }
-
-  mapping(bytes4 => RunProtection) run_protection_info;
 
   event Set_Admin(address newAdmin, uint newAdminLocktime);
   event Update_Admin(address newAdmin);
@@ -133,28 +126,10 @@ contract JaxAdmin is Initializable, JaxOwnable {
   event Set_Jusd_Jtoken_Ratio(address jtoken, uint old_ratio, uint new_ratio);
   event Set_Whitelist_For_Operator(address operator, bytes4[] functions);
   event Delete_JToken(address jtoken);
-  event Request_Update(bytes4 sig, bytes data);
 
   modifier checkZeroAddress(address account) {
     require(account != address(0x0), "Only non-zero address");
     _;
-  }
-
-  modifier runProtection() {
-    RunProtection storage protection = run_protection_info[msg.sig];
-    bytes32 data_hash = keccak256(msg.data);
-    if(data_hash != protection.data_hash || protection.sender != msg.sender) {
-      protection.sender = msg.sender;
-      protection.data_hash = keccak256(msg.data);
-      protection.request_timestamp = uint8(block.timestamp);
-      protection.executed = false;
-      emit Request_Update(msg.sig, msg.data);
-      return;
-    }
-    require(protection.executed == false, "Already executed");
-    require(block.timestamp >= protection.request_timestamp + 1 minutes, "Running is Locked");
-    _;
-    protection.executed = true;
   }
 
   function userIsAdmin (address _user) public view returns (bool) {
@@ -240,7 +215,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Update_Admin(admin);
   }
 
-  function setGovernor (address _governor) external checkZeroAddress(_governor) onlyAjaxPrime {
+  function setGovernor (address _governor) external checkZeroAddress(_governor) onlyAjaxPrime runProtection {
     new_governor_by_ajaxprime = _governor;
     emit Set_Governor(_governor);
   }
@@ -311,7 +286,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Update_Governor(old_governor, newGovernor);
   }
 
-  function set_system_policy(string memory _policy_hash, string memory _policy_link) public onlyAdmin {
+  function set_system_policy(string memory _policy_hash, string memory _policy_link) public onlyAdmin runProtection {
     system_policy_hash = _policy_hash;
     system_policy_link = _policy_link;
     emit Set_System_Policy(_policy_hash, _policy_link);
@@ -330,7 +305,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
 
-  function set_fee_freelist(address[] calldata accounts, bool flag) external onlyAjaxPrime {
+  function set_fee_freelist(address[] calldata accounts, bool flag) external onlyAjaxPrime runProtection {
       uint length = accounts.length;
       for(uint i = 0; i < length; i++) {
           fee_freelist[accounts[i]] = flag;
@@ -365,13 +340,14 @@ contract JaxAdmin is Initializable, JaxOwnable {
   }
 
   // ------ jaxPlanet -----
-  function setJaxPlanet(address _jaxPlanet) public checkZeroAddress(_jaxPlanet) onlyAdmin {
+  function setJaxPlanet(address _jaxPlanet) public checkZeroAddress(_jaxPlanet) onlyAdmin runProtection {
     jaxPlanet = _jaxPlanet;
     emit Set_Jax_Planet(_jaxPlanet);
   }
 
   function setTokenAddresses(address _busd, address _wjxn, address _wjax, address _vrp, address _jusd) public onlyAdmin 
      checkZeroAddress(_busd) checkZeroAddress(_wjxn) checkZeroAddress(_wjax) checkZeroAddress(_vrp) checkZeroAddress(_jusd)
+     runProtection
   {
     busd = IERC20(_busd);
     wjxn = IERC20(_wjxn);
@@ -382,7 +358,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Set_Token_Addresses(_busd, _wjxn, _wjax, _vrp, _jusd);
   }
 
-  function add_jtoken(address token, string calldata name, uint jusd_ratio, uint markup_fee, address markup_fee_wallet) external onlyAjaxPrime {
+  function add_jtoken(address token, string calldata name, uint jusd_ratio, uint markup_fee, address markup_fee_wallet) external onlyAjaxPrime runProtection {
     require(markup_fee <= 25 * 1e5, "markup fee cannot over 2.5%");
     require(jusd_ratio > 0, "JUSD-JToken ratio should not be zero");
 
@@ -397,7 +373,7 @@ contract JaxAdmin is Initializable, JaxOwnable {
     emit Add_JToken(token, name, jusd_ratio, markup_fee, markup_fee_wallet);
   }
 
-  function delete_jtoken(address token) external onlyAjaxPrime {
+  function delete_jtoken(address token) external onlyAjaxPrime runProtection {
     JToken storage jtoken = jtokens[token];
     jtoken.jusd_ratio = 0;
     uint jtoken_index = 0;

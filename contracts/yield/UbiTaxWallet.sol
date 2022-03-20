@@ -7,8 +7,9 @@ import "../interface/IJaxAdmin.sol";
 import "../interface/IPancakeRouter.sol";
 import "../interface/IERC20.sol";
 import "../JaxOwnable.sol";
+import "../JaxProtection.sol";
 
-contract UbiTaxWallet is Initializable, JaxOwnable {
+contract UbiTaxWallet is Initializable, JaxOwnable, JaxProtection {
 
     event Set_Jax_Admin(address old_jax_admin, address new_jax_admin);
     event Set_Yield_Tokens(address[] tokens);
@@ -45,7 +46,7 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         owner = msg.sender;
     }
 
-    function set_yield_tokens(address[] calldata newYieldTokens) public onlyAjaxPrime {
+    function set_yield_tokens(address[] calldata newYieldTokens) public onlyAjaxPrime runProtection {
         delete yieldTokens;
         uint tokenLength = newYieldTokens.length;
         for (uint i=0; i < tokenLength; i++) {
@@ -55,7 +56,7 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         emit Set_Yield_Tokens(newYieldTokens);
     }
 
-    function set_reward_token(address _rewardToken) public checkZeroAddress(_rewardToken) onlyAjaxPrime {
+    function set_reward_token(address _rewardToken) public checkZeroAddress(_rewardToken) onlyAjaxPrime runProtection {
         rewardToken = _rewardToken;
         emit Set_Reward_Token(_rewardToken);
     }
@@ -100,12 +101,12 @@ contract UbiTaxWallet is Initializable, JaxOwnable {
         return amounts[1] * amountIn * (1e8 - slippage) / 1e8;
     }
 
-    function withdrawByAdmin(address token, uint amount) external onlyAjaxPrime {
+    function withdrawByAdmin(address token, uint amount) external onlyAjaxPrime runProtection {
         IERC20(token).transfer(msg.sender, amount);
         emit Withdraw_By_Admin(token, amount);
     }
 
-    function setJaxAdmin(address newJaxAdmin) external onlyAjaxPrime {
+    function setJaxAdmin(address newJaxAdmin) external onlyAjaxPrime runProtection {
         address oldJaxAdmin = address(jaxAdmin);
         jaxAdmin = IJaxAdmin(newJaxAdmin);
         require(jaxAdmin.system_status() >= 0, "Invalid jax admin");

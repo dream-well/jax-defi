@@ -4,8 +4,9 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interface/IERC20.sol";
+import "../JaxProtection.sol";
 
-contract Ubi is Initializable {
+contract Ubi is Initializable, JaxProtection {
 
     event Set_Ajax_Prime(address newUbiAjaxPrime, uint newUbiAjaxPrimeLocktime);
     event Update_Ajax_Prime(address newUbiAjaxPrime);
@@ -119,7 +120,7 @@ contract Ubi is Initializable {
         return false;
     }
 
-    function setGovernors (address[] calldata _jaxCorp_governors) external onlyUbiAjaxPrime {
+    function setGovernors (address[] calldata _jaxCorp_governors) external onlyUbiAjaxPrime runProtection {
         uint jaxCorp_governorsCnt = _jaxCorp_governors.length;
         delete jaxCorp_governors;
         for(uint index = 0; index < jaxCorp_governorsCnt; index += 1 ) {
@@ -128,7 +129,7 @@ contract Ubi is Initializable {
         emit Set_JaxCorp_Governors(_jaxCorp_governors);
     }
 
-    function setAjaxPrimeDelegates (address[] calldata _delegates) external onlyUbiAjaxPrime {
+    function setAjaxPrimeDelegates (address[] calldata _delegates) external onlyUbiAjaxPrime runProtection {
         uint count = _delegates.length;
         delete ajaxPrime_delegates;
         for(uint index = 0; index < count; index += 1 ) {
@@ -154,12 +155,12 @@ contract Ubi is Initializable {
         emit Set_JaxCorp_Governor_Limit(jaxCorp_governor, limit);
     }
 
-    function set_reward_token(address _rewardToken) external checkZeroAddress(_rewardToken) onlyUbiAjaxPrime {
+    function set_reward_token(address _rewardToken) external checkZeroAddress(_rewardToken) onlyUbiAjaxPrime runProtection {
         rewardToken = _rewardToken;
         emit Set_Reward_Token(_rewardToken);
     }
 
-    function set_minimum_reward_per_person(uint amount) external onlyUbiAjaxPrime {
+    function set_minimum_reward_per_person(uint amount) external onlyUbiAjaxPrime runProtection {
         minimumRewardPerPerson = amount;
         emit Set_Minimum_Reward_Per_Person(amount);
     }
@@ -328,12 +329,12 @@ contract Ubi is Initializable {
         }
     }
 
-    function set_locktime(uint _locktime) external onlyUbiAjaxPrime {
+    function set_locktime(uint _locktime) external onlyUbiAjaxPrime runProtection {
         locktime = _locktime;
         emit Set_Locktime(_locktime);
     }
 
-    function withdrawByAdmin(address token, uint amount) external onlyUbiAjaxPrime {
+    function withdrawByAdmin(address token, uint amount) external onlyUbiAjaxPrime runProtection {
         IERC20(token).transfer(msg.sender, amount);
         emit Withdraw_By_Admin(token, amount);
     }

@@ -7,12 +7,13 @@ import "../interface/IJaxAdmin.sol";
 import "../interface/IPancakeRouter.sol";
 import "../interface/IERC20.sol";
 import "../JaxOwnable.sol";
+import "../JaxProtection.sol";
 
 interface IYield {
     function deposit_reward(uint amount) external;
 }
 
-contract TxFeeWallet is Initializable, JaxOwnable {
+contract TxFeeWallet is Initializable, JaxOwnable, JaxProtection {
 
     event Set_Jax_Admin(address old_jax_admin, address new_jax_admin);
     event Set_Yield_Tokens(address[] tokens);
@@ -158,12 +159,12 @@ contract TxFeeWallet is Initializable, JaxOwnable {
         return amounts[1] * amountIn * (1e8 - slippage) / 1e8;
     }
 
-    function withdrawByAdmin(address token, uint amount) external onlyAdmin {
+    function withdrawByAdmin(address token, uint amount) external onlyAdmin runProtection {
         IERC20(token).transfer(msg.sender, amount);
         emit Withdraw_By_Admin(token, amount);
     }
 
-    function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
+    function setJaxAdmin(address newJaxAdmin) external onlyAdmin runProtection {
         address oldJaxAdmin = address(jaxAdmin);
         jaxAdmin = IJaxAdmin(newJaxAdmin);
         require(jaxAdmin.system_status() >= 0, "Invalid jax admin");

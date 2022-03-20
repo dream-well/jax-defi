@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "./interface/IERC20.sol";
 import "./JaxOwnable.sol";
+import "./JaxProtection.sol";
 
 interface IJaxAdmin {
   function userIsAdmin (address _user) external view returns (bool);
@@ -38,7 +39,7 @@ interface IVRP {
  * @dev Implementation of the VRP
  */
 //, Initializable
-contract VRP is IVRP, Initializable, JaxOwnable {
+contract VRP is IVRP, Initializable, JaxOwnable, JaxProtection {
     
     IJaxAdmin public jaxAdmin;
 
@@ -116,7 +117,7 @@ contract VRP is IVRP, Initializable, JaxOwnable {
         _;
     }
 
-    function setJaxAdmin(address _jaxAdmin) public onlyAdmin {
+    function setJaxAdmin(address _jaxAdmin) public onlyAdmin runProtection {
         jaxAdmin = IJaxAdmin(_jaxAdmin);    
         require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
         emit Set_Jax_Admin(_jaxAdmin);
@@ -309,7 +310,7 @@ contract VRP is IVRP, Initializable, JaxOwnable {
         emit Approval(owner, spender, amount);
     }
 
-    function withdrawByAdmin(address token, uint amount) external onlyAdmin {
+    function withdrawByAdmin(address token, uint amount) external onlyAdmin runProtection {
         IERC20(token).transfer(msg.sender, amount);
         emit Withdraw_By_Admin(token, amount);
     }

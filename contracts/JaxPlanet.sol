@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "./interface/IJaxAdmin.sol";
 import "./JaxOwnable.sol";
+import "./JaxProtection.sol";
 
 interface IJaxPlanet {
 
@@ -25,7 +26,7 @@ interface IJaxPlanet {
   function getUserColonyAddress(address user) external view returns(address);
 }
 
-contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
+contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable, JaxProtection {
   
   IJaxAdmin public jaxAdmin;
 
@@ -64,14 +65,14 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
     _;
   }
 
-  function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
+  function setJaxAdmin(address newJaxAdmin) external onlyAdmin runProtection {
     address oldAdmin = address(jaxAdmin);
     jaxAdmin = IJaxAdmin(newJaxAdmin);
     require(jaxAdmin.system_status() >= 0, "Invalid Jax Admin");
     emit Set_Jax_Admin(oldAdmin, newJaxAdmin);
   }
 
-  function setUbiTax(uint _ubi_tax, address wallet) external checkZeroAddress(wallet) onlyAjaxPrime {
+  function setUbiTax(uint _ubi_tax, address wallet) external checkZeroAddress(wallet) onlyAjaxPrime runProtection {
       require(_ubi_tax <= 1e8 * 10 / 100 , "UBI tax can't be more than 10.");
       ubi_tax = _ubi_tax;
       ubi_tax_wallet = wallet;
@@ -123,7 +124,7 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
     emit Set_Colony_Address(msg.sender, colony);
   }
 
-  function setJaxCorpDAO(address jaxCorpDao_wallet, uint128 tx_tax, string memory policy_link, bytes32 policy_hash) external checkZeroAddress(jaxCorpDao_wallet) onlyAjaxPrime {
+  function setJaxCorpDAO(address jaxCorpDao_wallet, uint128 tx_tax, string memory policy_link, bytes32 policy_hash) external checkZeroAddress(jaxCorpDao_wallet) onlyAjaxPrime runProtection {
       require(tx_tax <= (1e8) * 20 / 100, "Tx tax can't be more than 20%");
       jaxcorp_dao_wallet = jaxCorpDao_wallet;
 
@@ -135,7 +136,7 @@ contract JaxPlanet is Initializable, IJaxPlanet, JaxOwnable{
       emit Set_Jax_Corp_Dao(jaxCorpDao_wallet, tx_tax, policy_link, policy_hash);
   }
 
-  function setMinTransactionTax(uint128 min_tx_tax) external onlyAjaxPrime {
+  function setMinTransactionTax(uint128 min_tx_tax) external onlyAjaxPrime runProtection {
     require(min_tx_tax <= 2e7, "min transaction tax is higher than 20%");
     min_transaction_tax = min_tx_tax;
     emit Set_Min_Transaction_Tax(min_tx_tax);

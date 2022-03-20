@@ -7,6 +7,7 @@ import "./interface/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./JaxLibrary.sol";
 import "./JaxOwnable.sol";
+import "./JaxProtection.sol";
 
 interface IJaxSwap {
   event Set_Jax_Admin(address jax_admin);
@@ -53,7 +54,7 @@ interface IJaxAdmin {
   function blacklist(address _user) external view returns (bool);
 }
 
-contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
+contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
   
   /// @custom:oz-upgrades-unsafe-allow constructor
   using JaxLibrary for JaxSwap;
@@ -104,7 +105,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable {
     require(amountOut >= amountOutMin, "JaxSwap: INSUFFICIENT_OUTPUT_AMOUNT");
   }
 
-  function setJaxAdmin(address newJaxAdmin) external onlyAdmin {
+  function setJaxAdmin(address newJaxAdmin) external onlyAdmin runProtection {
     jaxAdmin = IJaxAdmin(newJaxAdmin);
     require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
     emit Set_Jax_Admin(newJaxAdmin);

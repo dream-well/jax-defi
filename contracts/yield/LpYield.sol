@@ -8,8 +8,9 @@ import "../interface/IJaxAdmin.sol";
 import "../interface/IERC20.sol";
 import "../JaxLibrary.sol";
 import "../JaxOwnable.sol";
+import "../JaxProtection.sol";
 
-contract LpYield is Initializable, JaxOwnable {
+contract LpYield is Initializable, JaxOwnable, JaxProtection {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     using JaxLibrary for LpYield;
@@ -143,13 +144,13 @@ contract LpYield is Initializable, JaxOwnable {
         _;
     }
 
-    function setJaxAdmin(address _jaxAdmin) public onlyAdmin {
+    function setJaxAdmin(address _jaxAdmin) public onlyAdmin runProtection {
         jaxAdmin = IJaxAdmin(_jaxAdmin);    
         require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
         emit Set_Jax_Admin(_jaxAdmin);
     }
     
-    function set_token_addresses(address _WJAX, address _BUSD) external checkZeroAddress(_WJAX) checkZeroAddress(_BUSD) onlyAdmin {
+    function set_token_addresses(address _WJAX, address _BUSD) external checkZeroAddress(_WJAX) checkZeroAddress(_BUSD) onlyAdmin runProtection {
         WJAX = _WJAX;
         BUSD = _BUSD;
         address lpToken = IPancakeFactory(router.factory()).getPair(_WJAX, _BUSD);
@@ -378,7 +379,7 @@ contract LpYield is Initializable, JaxOwnable {
         emit Harvest(msg.sender, reward);
     }
 
-    function withdrawByAdmin(address token, uint amount) external onlyAdmin {
+    function withdrawByAdmin(address token, uint amount) external onlyAdmin runProtection {
         IERC20(token).transfer(msg.sender, amount);
         emit Withdraw_By_Admin(token, amount);
     }
