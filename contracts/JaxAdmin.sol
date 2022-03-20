@@ -96,7 +96,8 @@ contract JaxAdmin is Initializable, JaxOwnable {
 
   struct RunProtection {
     bytes32 data_hash;
-    uint request_timestamp;
+    uint8 request_timestamp;
+    address sender;
     bool executed;
   }
 
@@ -142,9 +143,10 @@ contract JaxAdmin is Initializable, JaxOwnable {
   modifier runProtection() {
     RunProtection storage protection = run_protection_info[msg.sig];
     bytes32 data_hash = keccak256(msg.data);
-    if(data_hash != protection.data_hash) {
+    if(data_hash != protection.data_hash || protection.sender != msg.sender) {
+      protection.sender = msg.sender;
       protection.data_hash = keccak256(msg.data);
-      protection.request_timestamp = block.timestamp;
+      protection.request_timestamp = uint8(block.timestamp);
       protection.executed = false;
       emit Request_Update(msg.sig, msg.data);
       return;
