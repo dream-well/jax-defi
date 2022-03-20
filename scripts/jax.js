@@ -98,8 +98,16 @@ void async function main() {
     console.log("busd mint");
     await wjax.setGateKeepers([owner.address]);
     console.log("gatekeeper");
+    await wait();
+
+    console.log("setGateKeepers");
+    await wjax.setGateKeepers([owner.address]);
 
     let amount = ethers.utils.parseUnits("10000000000000", 4);
+    await wjax.setMintBurnLimit(owner.address, amount, amount);
+    await wait();
+
+    
     await wjax.setMintBurnLimit(owner.address, amount, amount);
     
     await wjxn.mint(owner.address, "10000000000000");
@@ -118,9 +126,6 @@ void async function main() {
 
     await wait();
 
-    console.log("setGateKeepers");
-    await wjax.setGateKeepers([owner.address]);
-    await wjax.setMintBurnLimit(owner.address, amount, amount);
     await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address);
 
   }
