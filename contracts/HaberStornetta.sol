@@ -9,7 +9,7 @@ contract HaberStornetta is BEP20 {
     IBEP20 WJXN;
 
     constructor(address _WJXN) BEP20("Haber-Stornetta Token", "HST"){
-        _setupDecimals(8);
+        _setupDecimals(0);
         WJXN = IBEP20(_WJXN);
     }
 
