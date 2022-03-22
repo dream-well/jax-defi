@@ -194,7 +194,7 @@ contract Ubi is Initializable, JaxProtection {
 
     function unlock_collect(address user, uint collect_id) external onlyJaxCorpGovernor {
         UserInfo storage info = userInfo[user];
-        require(info.jaxCorp_governor == msg.sender, "Invalid jaxCorp_governor");
+        require(info.jaxCorp_governor == msg.sender || isAjaxPrimeDelegate(msg.sender), "Invalid jaxCorp_governor");
         require(info.collects.length > collect_id, "Invalid collect_id");
         CollectInfo storage collect = info.collects[collect_id];
         require(collect.release_timestamp == 0, "Already released");
