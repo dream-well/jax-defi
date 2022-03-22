@@ -6,3 +6,5 @@ artifacts
 cache
 abi
 yarn.lock
+verify.sh
+scripts

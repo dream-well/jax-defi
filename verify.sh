@@ -1,8 +1,8 @@
-npx hardhat verify 0xf06F96334237eBB8c8B63701C64c9220825e7B50 "Pegged USD Binance" "BUSD" 18
-npx hardhat verify 0xD04e9e6f243bD71a286D2A6585599165449cFA88 "Wrapped Jaxnet" "WJXN" 0
-npx hardhat verify 0x757f9226d11400d3ecd9D221b3288d6405Fb6e0b "Wrapped Jax" "WJAX" 4
-npx hardhat verify 0x0d00b46D02c808295f9742C1f86392623388Ab12 "Jax Dollar" "JAX DOLLAR" 18
-npx hardhat verify 0x10B012a43A5319a71938F0AC4E5B462D168750C5 "Jax Rupee" "JAX RUPEE" 18
+npx hardhat verify 0x2062736C84FC2a4554c82F3Af80e8b91e8dfA71C "Pegged USD Binance" "BUSD" 18
+npx hardhat verify 0xD576C53A43Aed9EDF97e134DcE7B9Cdc328B7429 "Wrapped Jaxnet" "WJXN" 0
+npx hardhat verify 0xCeAb7e9BF15E6Ca847C17E6bd35be30a033c916D "Wrapped Jax" "WJAX" 4
+npx hardhat verify 0x39018b657FAfE5781712b7333B68952116E8e334 "Jax Dollar" "JAX DOLLAR" 18 --contract contracts/JaxToken.sol:JaxToken
+npx hardhat verify 0x93C3D27fC3Fce087b230FFd1acfD717B43Dc2c86 "Jax Rupee" "JAX RUPEE" 18 --contract contracts/JaxToken.sol:JaxToken
   
   
   
