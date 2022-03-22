@@ -1,3 +1,4 @@
+verify.sh
 .DS_Store
 secrets.json
 node_modules
@@ -6,5 +7,3 @@ artifacts
 cache
 abi
 yarn.lock
-verify.sh
-scripts
