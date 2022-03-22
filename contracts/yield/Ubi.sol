@@ -149,7 +149,7 @@ contract Ubi is Initializable, JaxProtection {
         return false;
     }
 
-    function setGovernorLimit(address jaxCorp_governor, uint limit, uint advance_limit) external onlyUbiAjaxPrime {
+    function setGovernorLimit(address jaxCorp_governor, uint limit, uint advance_limit) external onlyUbiAjaxPrime runProtection {
         jaxCorpGovernorLimitInfo[jaxCorp_governor] = limit;
         jaxCorpGovernorAdvanceLimitInfo[jaxCorp_governor] = advance_limit;
         emit Set_JaxCorp_Governor_Limit(jaxCorp_governor, limit);
