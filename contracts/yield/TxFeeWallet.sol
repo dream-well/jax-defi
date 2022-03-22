@@ -7,6 +7,7 @@ import "../interface/IJaxAdmin.sol";
 import "../interface/IPancakeRouter.sol";
 import "../interface/IERC20.sol";
 import "../JaxOwnable.sol";
+import "../JaxLibrary.sol";
 import "../JaxProtection.sol";
 
 interface IYield {
@@ -14,6 +15,8 @@ interface IYield {
 }
 
 contract TxFeeWallet is Initializable, JaxOwnable, JaxProtection {
+
+    using JaxLibrary for TxFeeWallet;
 
     event Set_Jax_Admin(address old_jax_admin, address new_jax_admin);
     event Set_Yield_Tokens(address[] tokens);
@@ -40,7 +43,7 @@ contract TxFeeWallet is Initializable, JaxOwnable, JaxProtection {
     address public rewardToken;
     IJaxAdmin public jaxAdmin;
 
-    IPancakeRouter01 public pancakeRouter;
+    address public pancakeRouter;
 
     modifier onlyAdmin() {
         require(jaxAdmin.userIsAdmin(msg.sender) || msg.sender == owner, "Only Admin can perform this operation.");
@@ -64,7 +67,7 @@ contract TxFeeWallet is Initializable, JaxOwnable, JaxProtection {
         checkZeroAddress(_admin_address) checkZeroAddress(_pancakeRouter) checkZeroAddress(_rewardToken)
     {
         jaxAdmin = IJaxAdmin(_admin_address);
-        pancakeRouter = IPancakeRouter01(_pancakeRouter); // 0x9ac64cc6e4415144c455bd8e4837fea55603e5c3
+        pancakeRouter = _pancakeRouter; // 0x9ac64cc6e4415144c455bd8e4837fea55603e5c3
         rewardToken = _rewardToken;
         owner = msg.sender;
     }
@@ -90,7 +93,7 @@ contract TxFeeWallet is Initializable, JaxOwnable, JaxProtection {
         uint tokenLength = newYieldTokens.length;
         for (uint i=0; i < tokenLength; i++) {
             yieldTokens.push(newYieldTokens[i]);
-            require(IERC20(newYieldTokens[i]).approve(address(pancakeRouter), type(uint256).max), "yield token pancake router approval failed");
+            require(IERC20(newYieldTokens[i]).approve(pancakeRouter, type(uint256).max), "yield token pancake router approval failed");
         }
         emit Set_Yield_Tokens(newYieldTokens);
     }
@@ -144,19 +147,8 @@ contract TxFeeWallet is Initializable, JaxOwnable, JaxProtection {
         path[0] = yieldToken;
         path[1] = rewardToken;
         require(amountIn <= IERC20(yieldToken).balanceOf(address(this)), "Insufficient yield token in this contract");
-        uint[] memory amounts = pancakeRouter.swapExactTokensForTokens(
-            amountIn, 
-            get_amount_out_min(amountIn, path, slippage),
-            path,
-            address(this),
-            block.timestamp
-        );
+        uint[] memory amounts = JaxLibrary.swapWithPriceImpactLimit(pancakeRouter, amountIn, slippage, path, address(this));
         return amounts[1];
-    }
-
-    function get_amount_out_min(uint amountIn, address[] memory path, uint slippage) internal view returns(uint) {
-        uint[] memory amounts = pancakeRouter.getAmountsOut(1, path);
-        return amounts[1] * amountIn * (1e8 - slippage) / 1e8;
     }
 
     function withdrawByAdmin(address token, uint amount) external onlyAdmin runProtection {
