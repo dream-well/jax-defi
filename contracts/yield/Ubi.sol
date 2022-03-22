@@ -120,7 +120,7 @@ contract Ubi is Initializable, JaxProtection {
         return false;
     }
 
-    function setGovernors (address[] calldata _jaxCorp_governors) external onlyUbiAjaxPrime runProtection {
+    function setJaxCorpGovernors (address[] calldata _jaxCorp_governors) external onlyUbiAjaxPrime runProtection {
         uint jaxCorp_governorsCnt = _jaxCorp_governors.length;
         delete jaxCorp_governors;
         for(uint index = 0; index < jaxCorp_governorsCnt; index += 1 ) {
@@ -149,7 +149,7 @@ contract Ubi is Initializable, JaxProtection {
         return false;
     }
 
-    function setGovernorLimit(address jaxCorp_governor, uint limit, uint advance_limit) external onlyUbiAjaxPrime runProtection {
+    function setJaxCorpGovernorLimit(address jaxCorp_governor, uint limit, uint advance_limit) external onlyUbiAjaxPrime runProtection {
         jaxCorpGovernorLimitInfo[jaxCorp_governor] = limit;
         jaxCorpGovernorAdvanceLimitInfo[jaxCorp_governor] = advance_limit;
         emit Set_JaxCorp_Governor_Limit(jaxCorp_governor, limit);
@@ -225,9 +225,14 @@ contract Ubi is Initializable, JaxProtection {
         require(info.status != Status.Init, "User is not registered");
         require(info.status != Status.Approved, "Already approved");
         require(idHashInfo[idHash] == address(0), "Id hash should be unique");
-        require(advance <= 10 * (10 ** IERC20(rewardToken).decimals()), "Max 10 advance");
-        require(advance <= jaxCorpGovernorAdvanceLimitInfo[msg.sender], "Out of advance limit");
-        jaxCorpGovernorAdvanceLimitInfo[msg.sender] -= advance;
+        if(info.status == Status.Rejected) {
+            require(advance == 0, "Advance should be zero");
+        }
+        else {
+            require(advance <= 10 * (10 ** IERC20(rewardToken).decimals()), "Max 10 advance");
+            require(advance <= jaxCorpGovernorAdvanceLimitInfo[msg.sender], "Out of advance limit");
+            jaxCorpGovernorAdvanceLimitInfo[msg.sender] -= advance;
+        }
         userCount += 1;
         info.harvestedReward = totalRewardPerPerson + advance;
         info.idHash = idHash;

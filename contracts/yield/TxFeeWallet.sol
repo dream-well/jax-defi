@@ -140,7 +140,7 @@ contract TxFeeWallet is Initializable, JaxOwnable, JaxProtection {
             amountIn = IERC20(yieldTokens[tokenId]).balanceOf(address(this));
         }
         address yieldToken = yieldTokens[tokenId];
-        address[] memory path;
+        address[] memory path = new address[](2);
         path[0] = yieldToken;
         path[1] = rewardToken;
         require(amountIn <= IERC20(yieldToken).balanceOf(address(this)), "Insufficient yield token in this contract");
