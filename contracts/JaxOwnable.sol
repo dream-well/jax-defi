@@ -19,7 +19,7 @@ contract JaxOwnable {
   function setNewOwner(address newOwner) external onlyOwner {
     require(newOwner != address(0x0), "New owner cannot be zero address");
     new_owner = newOwner;
-    new_owner_locktime = block.timestamp + 10 minutes;
+    new_owner_locktime = block.timestamp + 2 days;
     emit Set_New_Owner(newOwner, new_owner_locktime);
   }
 

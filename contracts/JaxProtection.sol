@@ -28,7 +28,7 @@ contract JaxProtection {
             return;
         }
         require(protection.executed == false, "Already executed");
-        require(block.timestamp >= uint(protection.request_timestamp) + 1 minutes, "Running is Locked");
+        require(block.timestamp >= uint(protection.request_timestamp) + 2 days, "Running is Locked");
         _;
         protection.executed = true;
     }

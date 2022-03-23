@@ -202,7 +202,7 @@ contract JaxAdmin is Initializable, JaxOwnable, JaxProtection {
     }
     else {
       new_admin = _admin;
-      new_admin_locktime = block.timestamp + 10 minutes;
+      new_admin_locktime = block.timestamp + 2 days;
     }
     emit Set_Admin(_admin, new_admin_locktime);
   }
@@ -264,7 +264,7 @@ contract JaxAdmin is Initializable, JaxOwnable, JaxProtection {
       return;
     }
     new_ajaxPrime = _ajaxPrime;
-    new_ajaxPrime_locktime = block.timestamp + 10 minutes;
+    new_ajaxPrime_locktime = block.timestamp + 2 days;
     emit Set_AjaxPrime(_ajaxPrime, new_ajaxPrime_locktime);
   }
 
