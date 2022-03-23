@@ -109,11 +109,11 @@ contract WJAX is BEP20, JaxProtection {
     _;
   }
 
-  modifier onlyGateKeeper() {
+  modifier onlyGateKeeper(address account) {
     uint cnt = gateKeepers.length;
     uint index = 0;
     for(; index < cnt; index += 1) {
-      if(gateKeepers[index] == msg.sender)
+      if(gateKeepers[index] == account)
         break;
     }
     require(index < cnt, "Only GateKeeper can perform this action");
@@ -140,7 +140,7 @@ contract WJAX is BEP20, JaxProtection {
     emit Set_Gate_Keepers(_gateKeepers);
   }
 
-  function setMintBurnLimit(address gateKeeper, uint mintLimit, uint burnLimit) external onlyAjaxPrime runProtection {
+  function setMintBurnLimit(address gateKeeper, uint mintLimit, uint burnLimit) external onlyAjaxPrime onlyGateKeeper(gateKeeper) runProtection {
     GateKeeper storage info = gateKeeperInfo[gateKeeper];
     info.mintLimit = mintLimit;
     info.burnLimit = burnLimit;
@@ -293,7 +293,7 @@ contract WJAX is BEP20, JaxProtection {
     }
   }
 
-  function mint(address account, uint amount) public notFrozen onlyGateKeeper {
+  function mint(address account, uint amount) public notFrozen onlyGateKeeper(msg.sender) {
     require(!jaxAdmin.blacklist(account), "account is blacklisted");
     GateKeeper storage gateKeeper = gateKeeperInfo[msg.sender];
     require(gateKeeper.mintLimit >= amount, "Mint amount exceeds limit");
