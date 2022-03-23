@@ -94,26 +94,26 @@ void async function main() {
     console.log("setJaxSwap");
     // await wjax.setJaxSwap(owner.address);
 
-    await busd.mint(owner.address, ethers.utils.parseUnits("10000000000000", 18));
+    await busd.mint(owner.address, ethers.utils.parseUnits("100000000000", 18));
     console.log("busd mint");
     await wjax.setGateKeepers([owner.address]);
     console.log("gatekeeper");
     await wait();
 
-    console.log("setGateKeepers");
-    await wjax.setGateKeepers([owner.address]);
+    // console.log("setGateKeepers");
+    // await wjax.setGateKeepers([owner.address]);
 
-    let amount = ethers.utils.parseUnits("10000000000000", 4);
-    await wjax.setMintBurnLimit(owner.address, amount, amount);
-    await wait();
+    // let amount = ethers.utils.parseUnits("10000000000000", 4);
+    // await wjax.setMintBurnLimit(owner.address, amount, amount);
+    // await wait();
 
     
-    await wjax.setMintBurnLimit(owner.address, amount, amount);
+    // await wjax.setMintBurnLimit(owner.address, amount, amount);
     
-    await wjxn.mint(owner.address, "10000000000000");
+    await wjxn.mint(owner.address, "36000000");
     console.log("wjxn mint")
-    await wjax.mint(owner.address, amount);
-    console.log("wjax mint");
+    // await wjax.mint(owner.address, amount);
+    // console.log("wjax mint");
     
 
     console.log("mint");
