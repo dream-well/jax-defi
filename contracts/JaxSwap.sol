@@ -234,7 +234,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
   }
 
   function swap_jusd_wjax(uint jusd_amount, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
-	  _swap_jusd_wjax(msg.sender, msg.sender, jusd_amount);
+	  check_amount_out(_swap_jusd_wjax(msg.sender, msg.sender, jusd_amount), amountOutMin);
 	}
 
   function _swap_jusd_jtoken(address from, address to, address jtoken, uint amountIn) internal returns(uint amountOut) {
