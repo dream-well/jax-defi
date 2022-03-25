@@ -12,6 +12,5 @@ interface IJaxAdmin {
   function system_status () external view returns (uint);
   function electGovernor (address _governor) external;  
   function blacklist(address _user) external view returns (bool);
-  function fee_blacklist(address _user) external view returns (bool);
   function priceImpactLimit() external view returns (uint);
 }

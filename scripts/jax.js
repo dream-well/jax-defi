@@ -4,7 +4,7 @@ const timer = util.promisify(setTimeout)
 const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3"; // binance smart chain mainnet
 
 async function wait() {
-  await timer(6100);
+  await timer(61000);
 }
 
 void async function main() {
