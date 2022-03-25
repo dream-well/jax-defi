@@ -278,7 +278,7 @@ contract JaxAdmin is Initializable, JaxOwnable, JaxProtection {
 
   function updateGovernor () external {
     require(newGovernor != governor && newGovernor != address(0x0), "New governor hasn't been elected");
-    require(governorStartDate >= block.timestamp, "New governor is not ready");
+    require(governorStartDate <= block.timestamp, "New governor is not ready");
     require(msg.sender == newGovernor, "You are not nominated as potential governor");
     address old_governor = governor;
     governor = newGovernor;
