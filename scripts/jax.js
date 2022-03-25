@@ -3,8 +3,10 @@ const { ethers, upgrades } = require("hardhat");
 const timer = util.promisify(setTimeout)
 const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3"; // binance smart chain mainnet
 
-async function wait() {
-  await timer(61000);
+async function wait(start) {
+  let elapsed = (new Date).getTime() - start;
+  if(elapsed > 120000) return;
+  await timer(12000 - elapsed);
 }
 
 void async function main() {
@@ -70,12 +72,12 @@ void async function main() {
     await vrp.setJaxAdmin(jaxAdmin.address);
     await jinr.setJaxAdmin(jaxAdmin.address);
 
-    await wait();
+    // await wait();
 
-    await wjax.setJaxAdmin(jaxAdmin.address);
-    await jusd.setJaxAdmin(jaxAdmin.address);
-    await vrp.setJaxAdmin(jaxAdmin.address);
-    await jinr.setJaxAdmin(jaxAdmin.address);
+    // await wjax.setJaxAdmin(jaxAdmin.address);
+    // await jusd.setJaxAdmin(jaxAdmin.address);
+    // await vrp.setJaxAdmin(jaxAdmin.address);
+    // await jinr.setJaxAdmin(jaxAdmin.address);
 
 
     
@@ -88,17 +90,15 @@ void async function main() {
     await jaxSwap.deployed();
     console.log("JaxSwap");
     await jaxAdmin.setJaxSwap(jaxSwap.address);
-    await wait();
-    await jaxAdmin.setJaxSwap(jaxSwap.address);
 
     console.log("setJaxSwap");
     // await wjax.setJaxSwap(owner.address);
 
     await busd.mint(owner.address, ethers.utils.parseUnits("100000000000", 18));
     console.log("busd mint");
-    await wjax.setGateKeepers([owner.address]);
-    console.log("gatekeeper");
-    await wait();
+    // await wjax.setGateKeepers([owner.address]);
+    // console.log("gatekeeper");
+    // await wait();
 
     // console.log("setGateKeepers");
     // await wjax.setGateKeepers([owner.address]);
@@ -124,9 +124,7 @@ void async function main() {
 
     console.log("setTokenAddresses");
 
-    await wait();
 
-    await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address);
 
   }
 
@@ -167,8 +165,6 @@ void async function main() {
     const JaxPlanet = await ethers.getContractFactory("JaxPlanet");
     jaxPlanet = await upgrades.deployProxy(JaxPlanet, [jaxAdmin.address], { initializer: 'initialize'});
     jaxAdmin.setJaxPlanet(jaxPlanet.address);
-    await wait();
-    jaxAdmin.setJaxPlanet(jaxPlanet.address);
     
   }
 
@@ -189,18 +185,35 @@ void async function main() {
     await attachPancakeRouter();
   await deployJaxAdmin();
   console.log("deployJaxAdmin");
+  await deployJaxPlanet();
+  console.log("deployJaxPlanet");
   await deployTokens();
   console.log("deployTokens");
   await deployJaxSwap();
+  let start= (new Date()).getTime();
   console.log("deployJaxSwap");
   await createLiquidity();
   console.log("createLiquidity");
   await deployYields();
   console.log("deployYields");
-  await deployJaxPlanet();
-  console.log("deployJaxPlanet");
   await deployUbi();
   console.log("deployUBI");
+  // console.log("wait for cooling");
+  // await wait(start);
+  async function set() {
+
+    await wjax.setJaxAdmin(jaxAdmin.address);
+    await jusd.setJaxAdmin(jaxAdmin.address);
+    await vrp.setJaxAdmin(jaxAdmin.address);
+    await jinr.setJaxAdmin(jaxAdmin.address);
+
+    await jaxAdmin.setJaxSwap(jaxSwap.address);
+    await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address); 
+    await jaxAdmin.setJaxPlanet(jaxPlanet.address);
+
+  }
+  await set();
+  console.log("set");
   
   const addresses = {
     busd: busd.address,
