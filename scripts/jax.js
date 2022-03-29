@@ -1,17 +1,20 @@
 const util = require('util');
 const { ethers, upgrades } = require("hardhat");
 const timer = util.promisify(setTimeout)
-const pancakeRouterAddr = "0x9ac64cc6e4415144c455bd8e4837fea55603e5c3"; // binance smart chain mainnet
+const pancakeRouterAddr = "0x10ED43C718714eb63d5aA57B78B54704E256024E"; // binance smart chain mainnet
+const BUSD = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
+const WJXN = "0xcA1262e77Fb25c0a4112CFc9bad3ff54F617f2e6";
 
 async function wait(start) {
   let elapsed = (new Date).getTime() - start;
-  if(elapsed > 120000) return;
-  await timer(12000 - elapsed);
+  if(elapsed > 600000) return;
+  await timer(600000 - elapsed);
 }
 
 void async function main() {
 
   const [owner] = await ethers.getSigners();
+  console.log("deployer:", owner.address);
   let vrp;
   let jaxAdmin;
   let jaxSwap;
@@ -28,6 +31,7 @@ void async function main() {
   let ubi;
   let lpYield;
   let jaxPlanet;
+  let haber;
 
   async function attachPancakeRouter() {
     const PancakeRouter = await ethers.getContractFactory("PancakeRouter"); 
@@ -55,22 +59,25 @@ void async function main() {
 
   async function deployTokens() {
 // Tokens
-    const ERC20 = await ethers.getContractFactory("CommonBEP20");
     const JaxToken = await ethers.getContractFactory("JaxToken");
     const WJAX = await ethers.getContractFactory("WJAX");
     const VRP = await ethers.getContractFactory("VRP");
+    const Haber = await ethers.getContractFactory("HaberStornetta");
 
-    busd = await ERC20.deploy("Pegged USD Binance", "BUSD", 18);
-    wjxn = await ERC20.deploy("Wrapped Jaxnet", "WJXN", 0);
+    busd = await ethers.getContractAt("CommonBEP20", BUSD);
+    wjxn = await ethers.getContractAt("CommonBEP20", WJXN);
     wjax = await WJAX.deploy("Wrapped Jax", "WJAX", 4);
     jusd = await JaxToken.deploy("Jax Dollar", "JAX DOLLAR", 18);
-    vrp = await upgrades.deployProxy(VRP, [jaxAdmin.address], { initializer: 'initialize' });;
+    vrp = await upgrades.deployProxy(VRP, [jaxAdmin.address], { initializer: 'initialize' });
     jinr = await JaxToken.deploy("Jax Rupee", "JAX RUPEE", 18);
+    haber = await Haber.deploy(wjxn.address);
 
-    await wjax.setJaxAdmin(jaxAdmin.address);
-    await jusd.setJaxAdmin(jaxAdmin.address);
+    console.log("setJaxAdmin");
+
+    // await wjax.setJaxAdmin(jaxAdmin.address);
+    // await jusd.setJaxAdmin(jaxAdmin.address);
     await vrp.setJaxAdmin(jaxAdmin.address);
-    await jinr.setJaxAdmin(jaxAdmin.address);
+    // await jinr.setJaxAdmin(jaxAdmin.address);
 
     // await wait();
 
@@ -94,7 +101,7 @@ void async function main() {
     console.log("setJaxSwap");
     // await wjax.setJaxSwap(owner.address);
 
-    await busd.mint(owner.address, ethers.utils.parseUnits("100000000000", 18));
+    // await busd.mint(owner.address, ethers.utils.parseUnits("100000000000", 18));
     console.log("busd mint");
     // await wjax.setGateKeepers([owner.address]);
     // console.log("gatekeeper");
@@ -110,7 +117,7 @@ void async function main() {
     
     // await wjax.setMintBurnLimit(owner.address, amount, amount);
     
-    await wjxn.mint(owner.address, "36000000");
+    // await wjxn.mint(owner.address, "36000000");
     console.log("wjxn mint")
     // await wjax.mint(owner.address, amount);
     // console.log("wjax mint");
@@ -164,7 +171,7 @@ void async function main() {
   async function deployJaxPlanet() {
     const JaxPlanet = await ethers.getContractFactory("JaxPlanet");
     jaxPlanet = await upgrades.deployProxy(JaxPlanet, [jaxAdmin.address], { initializer: 'initialize'});
-    jaxAdmin.setJaxPlanet(jaxPlanet.address);
+    await jaxAdmin.setJaxPlanet(jaxPlanet.address);
     
   }
 
@@ -198,7 +205,30 @@ void async function main() {
   console.log("deployYields");
   await deployUbi();
   console.log("deployUBI");
-  // console.log("wait for cooling");
+  
+  
+  const addresses = {
+    busd: busd.address,
+    wjxn: wjxn.address,
+    wjax: wjax.address,
+    vrp: vrp.address,
+    jusd: jusd.address,
+    jinr: jinr.address,
+    haber: haber.address,
+    jaxAdmin: jaxAdmin.address,
+    jaxSwap: jaxSwap.address,
+    jaxPlanet: jaxPlanet.address,
+    txFeeWallet: txFeeWallet.address,
+    ubiTaxWallet: ubiTaxWallet.address,
+    ubi: ubi.address,
+    lpYield: lpYield.address
+  }
+
+  console.log(addresses);
+
+  console.log("Current BNB Balance: ", await ethers.provider.getBalance(owner.address));
+
+  console.log("wait for cooling");
   // await wait(start);
   async function set() {
 
@@ -212,26 +242,6 @@ void async function main() {
     await jaxAdmin.setJaxPlanet(jaxPlanet.address);
 
   }
-  await set();
+  // await set();
   console.log("set");
-  
-  const addresses = {
-    busd: busd.address,
-    wjxn: wjxn.address,
-    wjax: wjax.address,
-    vrp: vrp.address,
-    jusd: jusd.address,
-    jinr: jinr.address,
-    jaxAdmin: jaxAdmin.address,
-    jaxSwap: jaxSwap.address,
-    jaxPlanet: jaxPlanet.address,
-    txFeeWallet: txFeeWallet.address,
-    ubiTaxWallet: ubiTaxWallet.address,
-    ubi: ubi.address,
-    lpYield: lpYield.address
-  }
-
-  console.log(addresses);
-
-  console.log("Current BNB Balance: ", await ethers.provider.getBalance(owner.address));
 }();

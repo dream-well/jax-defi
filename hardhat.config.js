@@ -6,7 +6,7 @@ require('hardhat-contract-sizer');
 
 
 const { deployerWalletPrivateKey } = require('./secrets.json');
-const { bscscanAPIkey, polygonscanAPIkey, avaAPIkey, etherscan } = require('./secrets.json');
+const { bscscanAPIkey, polygonscanAPIkey, avaAPIkey, etherscan, localmem, localpubkey } = require('./secrets.json');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -22,17 +22,20 @@ module.exports = {
     }
   },
   defaultNetwork: "bsctestnet",
-  hardhat: {
-    loggingEnabled: true,
-    mining: {
-      auto: false,
-      interval: 10
-    },
-    accounts: {
-      accountsBalance: "100000000000000000000000"
-    }
-  },
   networks: {
+    hardhat: {
+      forking: {
+        id: 56,
+        url: "https://bsc-dataseed1.binance.org/"
+      },
+      accounts: {mnemonic: localmem},
+      chainId: 56,
+    },
+    local: {
+      url: "http://localhost:8545",
+      id: 56,
+      accounts: [localpubkey]
+    },
     ethmainnet: {
       url: "https://mainnet.infura.io/v3/aedc2f89691644c5ad87877903d280b8",
       accounts: [deployerWalletPrivateKey],
