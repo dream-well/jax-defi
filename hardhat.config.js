@@ -47,7 +47,7 @@ module.exports = {
       
     },
     bscmainnet: {
-      url: `https://bsc-dataseed1.binance.org/`,
+      url: `https://bscrpc.com`,
       accounts: [deployerWalletPrivateKey],
     },
     polygonmainnet: {

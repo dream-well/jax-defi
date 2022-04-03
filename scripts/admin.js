@@ -48,7 +48,6 @@ void async function main() {
     factory = await PancakeFactory.deploy(owner.address);
     const WETH = await ethers.getContractFactory("WETH");
     weth = await WETH.deploy();
-    await weth.deployed();
     const PancakeRouter = await ethers.getContractFactory("PancakeRouter"); 
     pancakeRouter = await PancakeRouter.deploy(factory.address, weth.address);
   }
@@ -56,14 +55,11 @@ void async function main() {
   async function deployJaxAdmin() {
     const JaxAdmin = await ethers.getContractFactory("JaxAdmin"); 
     jaxAdmin = await upgrades.deployProxy(JaxAdmin, [pancakeRouter.address], { initializer: 'initialize' });
-    await jaxAdmin.deployed();
-    await timer(10000);
   }
 
   async function deployTokens() {
 // Tokens
-    const JAXUD = await ethers.getContractFactory("JAXUD");
-    const JAXRE = await ethers.getContractFactory("JAXRE");
+    const JaxToken = await ethers.getContractFactory("JaxToken");
     const WJAX = await ethers.getContractFactory("WJAX");
     const VRP = await ethers.getContractFactory("VRP");
     const Haber = await ethers.getContractFactory("HaberStornetta");
@@ -71,27 +67,18 @@ void async function main() {
     busd = await ethers.getContractAt("CommonBEP20", BUSD);
     wjxn = await ethers.getContractAt("CommonBEP20", WJXN);
     wjax = await WJAX.deploy("Wrapped Jax", "WJAX", 4);
-    await wjax.deployed();
-    jusd = await JAXUD.deploy();
-    await jusd.deployed();
-    console.log("jusd");
-    await timer(3000);
+    jusd = await JaxToken.deploy("Jax Dollar", "JAX DOLLAR", 18);
     vrp = await upgrades.deployProxy(VRP, [jaxAdmin.address], { initializer: 'initialize' });
-    await vrp.deployed();
-    jinr = await JAXRE.deploy();
-    
-    await jinr.deployed();
-    await timer(3000);
+    jinr = await JaxToken.deploy("Jax Rupee", "JAX RUPEE", 18);
     haber = await Haber.deploy(wjxn.address);
-    await haber.deployed();
 
     console.log("setJaxAdmin");
-    await timer(10000);
 
     // await wjax.setJaxAdmin(jaxAdmin.address);
     // await jusd.setJaxAdmin(jaxAdmin.address);
     await vrp.setJaxAdmin(jaxAdmin.address);
     // await jinr.setJaxAdmin(jaxAdmin.address);
+
     // await wait();
 
     // await wjax.setJaxAdmin(jaxAdmin.address);
@@ -105,23 +92,44 @@ void async function main() {
 
   async function deployJaxSwap() {
     
-    await timer(10000);
     const JaxSwap = await ethers.getContractFactory("JaxSwap");
     jaxSwap = await upgrades.deployProxy(JaxSwap, [jaxAdmin.address, pancakeRouter.address], { initializer: 'initialize' });
     await jaxSwap.deployed();
     console.log("JaxSwap");
-    await timer(10000);
     await jaxAdmin.setJaxSwap(jaxSwap.address);
-    await timer(10000);
 
     console.log("setJaxSwap");
     // await wjax.setJaxSwap(owner.address);
-    // await jaxAdmin.setJaxSwap(jaxSwap.address);
+
+    // await busd.mint(owner.address, ethers.utils.parseUnits("100000000000", 18));
+    console.log("busd mint");
+    // await wjax.setGateKeepers([owner.address]);
+    // console.log("gatekeeper");
+    // await wait();
+
+    // console.log("setGateKeepers");
+    // await wjax.setGateKeepers([owner.address]);
+
+    // let amount = ethers.utils.parseUnits("10000000000000", 4);
+    // await wjax.setMintBurnLimit(owner.address, amount, amount);
+    // await wait();
+
     
+    // await wjax.setMintBurnLimit(owner.address, amount, amount);
+    
+    // await wjxn.mint(owner.address, "36000000");
+    console.log("wjxn mint")
+    // await wjax.mint(owner.address, amount);
+    // console.log("wjax mint");
+    
+
+    console.log("mint");
+    // await jaxAdmin.setJaxSwap(jaxSwap.address);
+
+    console.log("setJaxSwap ---- end");
     await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address);
 
     console.log("setTokenAddresses");
-    await timer(10000);
 
 
 
@@ -133,9 +141,7 @@ void async function main() {
 
     try{
       await factory.createPair(wjxn.address, wjax.address);
-      await timer(10000);
       await factory.createPair(busd.address, wjax.address);
-      await timer(10000);
       await factory.createPair(busd.address, wjxn.address);
       console.log("wjxn/wjax", await factory.getPair(wjxn.address, wjax.address));
       console.log("busd/wjax", await factory.getPair(busd.address, wjax.address));
@@ -144,7 +150,6 @@ void async function main() {
       console.log("liquidity error");
     }
     
-    await timer(10000);
   }
 
   async function deployYields() {
@@ -152,31 +157,21 @@ void async function main() {
     const TxFeeWallet = await ethers.getContractFactory("TxFeeWallet"); 
     const UbiTaxWallet = await ethers.getContractFactory("UbiTaxWallet"); 
 
-    console.log("1...")
     const LpYield = await ethers.getContractFactory("LpYield");
     txFeeWallet = await upgrades.deployProxy(TxFeeWallet, 
         [jaxAdmin.address, pancakeRouter.address, wjxn.address], 
         { initializer: 'initialize' });
-    await txFeeWallet.deployed();
-    await timer(10000);
-    console.log("2...")
     ubiTaxWallet = await upgrades.deployProxy(UbiTaxWallet, 
         [jaxAdmin.address, pancakeRouter.address, wjax.address], { initializer: 'initialize' });
-    await ubiTaxWallet.deployed();
-    await timer(10000);
-    console.log("3...")
     lpYield = await upgrades.deployProxy(LpYield, 
         [jaxAdmin.address, pancakeRouter.address, busd.address, wjax.address], { initializer: 'initialize' })
-    await lpYield.deployed();
     // await lpYield.set_reward_token(wjax.address);
   }
 
   async function deployJaxPlanet() {
     const JaxPlanet = await ethers.getContractFactory("JaxPlanet");
     jaxPlanet = await upgrades.deployProxy(JaxPlanet, [jaxAdmin.address], { initializer: 'initialize'});
-    await jaxPlanet.deployed();
     await jaxAdmin.setJaxPlanet(jaxPlanet.address);
-    await timer(10000);
     
   }
 
@@ -186,7 +181,6 @@ void async function main() {
     ubi = await upgrades.deployProxy(Ubi, 
         [owner.address, wjax.address, 300], 
         { initializer: 'initialize' });
-    await ubi.deployed();
   }
 
   console.log("BNB Balance: ", await ethers.provider.getBalance(owner.address));
@@ -198,35 +192,36 @@ void async function main() {
     await attachPancakeRouter();
   await deployJaxAdmin();
   console.log("deployJaxAdmin");
-  await deployJaxPlanet();
-  console.log("deployJaxPlanet");
-  await deployTokens();
-  console.log("deployTokens");
-  await deployJaxSwap();
-  console.log("deployJaxSwap");
-  await createLiquidity();
-  console.log("createLiquidity");
-  await deployYields();
-  console.log("deployYields");
+  // await deployJaxPlanet();
+  // console.log("deployJaxPlanet");
+  // await deployTokens();
+  // console.log("deployTokens");
+  // await deployJaxSwap();
+  // let start= (new Date()).getTime();
+  // console.log("deployJaxSwap");
+  // await createLiquidity();
+  // console.log("createLiquidity");
+  // await deployYields();
+  // console.log("deployYields");
   // await deployUbi();
   // console.log("deployUBI");
   
   
   const addresses = {
-    busd: busd.address,
-    wjxn: wjxn.address,
-    wjax: wjax.address,
-    vrp: vrp.address,
-    jusd: jusd.address,
-    jinr: jinr.address,
-    haber: haber.address,
-    jaxAdmin: jaxAdmin.address,
-    jaxSwap: jaxSwap.address,
-    jaxPlanet: jaxPlanet.address,
-    txFeeWallet: txFeeWallet.address,
-    ubiTaxWallet: ubiTaxWallet.address,
-    // ubi: ubi.address,
-    lpYield: lpYield.address
+    busd: busd?.address,
+    wjxn: wjxn?.address,
+    wjax: wjax?.address,
+    vrp: vrp?.address,
+    jusd: jusd?.address,
+    jinr: jinr?.address,
+    haber: haber?.address,
+    jaxAdmin: jaxAdmin?.address,
+    jaxSwap: jaxSwap?.address,
+    jaxPlanet: jaxPlanet?.address,
+    txFeeWallet: txFeeWallet?.address,
+    ubiTaxWallet: ubiTaxWallet?.address,
+    ubi: ubi?.address,
+    lpYield: lpYield?.address
   }
 
   console.log(addresses);
@@ -236,6 +231,11 @@ void async function main() {
   console.log("wait for cooling");
   // await wait(start);
   async function set() {
+
+    await wjax.setJaxAdmin(jaxAdmin.address);
+    await jusd.setJaxAdmin(jaxAdmin.address);
+    await vrp.setJaxAdmin(jaxAdmin.address);
+    await jinr.setJaxAdmin(jaxAdmin.address);
 
     await jaxAdmin.setJaxSwap(jaxSwap.address);
     await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address); 
