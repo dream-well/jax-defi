@@ -76,8 +76,8 @@ void async function main() {
     await jusd.deployed();
     console.log("jusd");
     await timer(3000);
-    vrp = await upgrades.deployProxy(VRP, [jaxAdmin.address], { initializer: 'initialize' });
-    await vrp.deployed();
+    // vrp = await upgrades.deployProxy(VRP, [jaxAdmin.address], { initializer: 'initialize' });
+    // await vrp.deployed();
     jinr = await JAXRE.deploy();
     
     await jinr.deployed();
@@ -90,7 +90,7 @@ void async function main() {
 
     // await wjax.setJaxAdmin(jaxAdmin.address);
     // await jusd.setJaxAdmin(jaxAdmin.address);
-    await vrp.setJaxAdmin(jaxAdmin.address);
+    // await vrp.setJaxAdmin(jaxAdmin.address);
     // await jinr.setJaxAdmin(jaxAdmin.address);
     // await wait();
 
@@ -118,7 +118,7 @@ void async function main() {
     // await wjax.setJaxSwap(owner.address);
     // await jaxAdmin.setJaxSwap(jaxSwap.address);
     
-    await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, vrp.address, jusd.address);
+    await jaxAdmin.setTokenAddresses(busd.address, wjxn.address, wjax.address, "0x000000000000000000000000000000000000dEaD", jusd.address);
 
     console.log("setTokenAddresses");
     await timer(10000);
@@ -204,8 +204,8 @@ void async function main() {
   console.log("deployTokens");
   await deployJaxSwap();
   console.log("deployJaxSwap");
-  await createLiquidity();
-  console.log("createLiquidity");
+  // await createLiquidity();
+  // console.log("createLiquidity");
   await deployYields();
   console.log("deployYields");
   // await deployUbi();
@@ -213,20 +213,20 @@ void async function main() {
   
   
   const addresses = {
-    busd: busd.address,
-    wjxn: wjxn.address,
-    wjax: wjax.address,
-    vrp: vrp.address,
-    jusd: jusd.address,
-    jinr: jinr.address,
-    haber: haber.address,
-    jaxAdmin: jaxAdmin.address,
-    jaxSwap: jaxSwap.address,
-    jaxPlanet: jaxPlanet.address,
-    txFeeWallet: txFeeWallet.address,
-    ubiTaxWallet: ubiTaxWallet.address,
-    // ubi: ubi.address,
-    lpYield: lpYield.address
+    busd: busd?.address,
+    wjxn: wjxn?.address,
+    wjax: wjax?.address,
+    vrp: vrp?.address,
+    jusd: jusd?.address,
+    jinr: jinr?.address,
+    haber: haber?.address,
+    jaxAdmin: jaxAdmin?.address,
+    jaxSwap: jaxSwap?.address,
+    jaxPlanet: jaxPlanet?.address,
+    txFeeWallet: txFeeWallet?.address,
+    ubiTaxWallet: ubiTaxWallet?.address,
+    ubi: ubi?.address,
+    lpYield: lpYield?.address
   }
 
   console.log(addresses);
