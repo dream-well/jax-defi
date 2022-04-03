@@ -3,8 +3,8 @@
 pragma solidity 0.8.11;
 
 import "./lib/BEP20.sol";
-import "./JaxAdmin.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./JaxProtection.sol";
 
 
 interface IJaxPlanet {
@@ -27,6 +27,7 @@ interface IJaxPlanet {
 interface IJaxAdmin {
   
   function userIsAdmin (address _user) external view returns (bool);
+  function userIsAjaxPrime (address _user) external view returns (bool);
 
   function jaxSwap() external view returns (address);
   function jaxPlanet() external view returns (address);
@@ -38,12 +39,13 @@ interface IJaxAdmin {
 } 
 
 /**
-* @title JaxToken
-* @dev Implementation of the JaxToken. Extension of {BEP20} that adds a fee transaction behaviour.
+* @title WJAX
+* @dev Implementation of the WJAX. Extension of {BEP20} that adds a fee transaction behaviour.
 */
-contract JaxToken is BEP20 {
+contract JaxToken is BEP20, JaxProtection {
   
   IJaxAdmin public jaxAdmin;
+  address[] public gateKeepers;
 
   // transaction fee
   uint public transaction_fee = 0;
@@ -55,7 +57,7 @@ contract JaxToken is BEP20 {
   uint public cashback = 0; // 8 decimals
   // transaction fee decimal 
   // uint public constant _fee_decimal = 8;
-
+  
   struct Colony {
     uint128 level;
     uint128 transaction_tax;
@@ -67,7 +69,16 @@ contract JaxToken is BEP20 {
   
   mapping (address => address) public referrers;
 
+  struct GateKeeper {
+    uint mintLimit;
+    uint burnLimit;
+  }
+
+  mapping (address => GateKeeper) gateKeeperInfo;
+
   event Set_Jax_Admin(address jax_admin);
+  event Set_Gate_Keepers(address[] gate_keepers);
+  event Set_Mint_Burn_Limit(address gateKeeper, uint mintLimit, uint burnLimit);
   event Set_Transaction_Fee(uint transaction_fee, uint trasnaction_fee_cap, address transaction_fee_wallet);
   event Set_Referral_Fee(uint referral_fee, uint referral_amount_threshold);
   event Set_Cashback(uint cashback_percent);
@@ -93,11 +104,23 @@ contract JaxToken is BEP20 {
     _;
   }
 
-  modifier onlyJaxSwap() {
-  require(msg.sender == jaxAdmin.jaxSwap(), "Only JaxSwap can perform this operation.");
+  modifier onlyAjaxPrime() {
+    require(jaxAdmin.userIsAjaxPrime(msg.sender) || msg.sender == owner(), "Only AjaxPrime can perform this operation.");
     _;
   }
 
+  modifier onlyGateKeeper(address account) {
+    uint cnt = gateKeepers.length;
+    uint index = 0;
+    for(; index < cnt; index += 1) {
+      if(gateKeepers[index] == account)
+        break;
+    }
+    require(index < cnt, "Only GateKeeper can perform this action");
+    _;
+  }
+
+  
   modifier notFrozen() {
     require(jaxAdmin.system_status() > 0, "Transactions have been frozen.");
     _;
@@ -105,8 +128,23 @@ contract JaxToken is BEP20 {
 
   function setJaxAdmin(address _jaxAdmin) external onlyOwner {
     jaxAdmin = IJaxAdmin(_jaxAdmin);  
-    require(jaxAdmin.system_status() >= 0, "Invalid jax admin");
     emit Set_Jax_Admin(_jaxAdmin);
+  }
+
+  function setGateKeepers(address[] calldata _gateKeepers) external onlyAjaxPrime runProtection {
+    uint cnt = _gateKeepers.length;
+    delete gateKeepers;
+    for(uint index = 0; index < cnt; index += 1) {
+      gateKeepers.push(_gateKeepers[index]);
+    }
+    emit Set_Gate_Keepers(_gateKeepers);
+  }
+
+  function setMintBurnLimit(address gateKeeper, uint mintLimit, uint burnLimit) external onlyAjaxPrime onlyGateKeeper(gateKeeper) runProtection {
+    GateKeeper storage info = gateKeeperInfo[gateKeeper];
+    info.mintLimit = mintLimit;
+    info.burnLimit = burnLimit;
+    emit Set_Mint_Burn_Limit(gateKeeper, mintLimit, burnLimit);
   }
 
   function setTransactionFee(uint tx_fee, uint tx_fee_cap, address wallet) external onlyJaxAdmin {
@@ -255,14 +293,12 @@ contract JaxToken is BEP20 {
     }
   }
 
-  function mint(address account, uint amount) public notFrozen onlyJaxSwap {
-      require(!jaxAdmin.blacklist(account), "account is blacklisted");
-      _mint(account, amount);
-  }
-
-  function burnFrom(address account, uint amount) public override(BEP20) notFrozen onlyJaxSwap {
+  function mint(address account, uint amount) public notFrozen onlyGateKeeper(msg.sender) {
     require(!jaxAdmin.blacklist(account), "account is blacklisted");
-    super.burnFrom(account, amount);
+    GateKeeper storage gateKeeper = gateKeeperInfo[msg.sender];
+    require(gateKeeper.mintLimit >= amount, "Mint amount exceeds limit");
+    super._mint(account, amount);
+    gateKeeper.mintLimit -= amount;
   }
 
 }
