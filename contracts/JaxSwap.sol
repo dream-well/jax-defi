@@ -81,8 +81,14 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
   }
 
   modifier isActive() {
-      require(jaxAdmin.system_status() == 2, "Swap_Paused"); //Swap has been paused by Admin.
-      _;
+    require(jaxAdmin.system_status() >= 2, "Swap_Paused"); //Swap has been paused by Admin.
+    _;
+  }
+
+  modifier isFullyActive() {
+    uint system_status = jaxAdmin.system_status();
+    require(system_status >= 3 || (system_status == 2 && jaxAdmin.userIsGovernor(msg.sender)), "Swap Paused");
+    _;
   }
 
   modifier notContract() {
@@ -216,7 +222,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
 		emit Swap_WJAX_JUSD(from, to, amountIn, amountOut);
   }
 
-  function swap_wjax_jusd(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+  function swap_wjax_jusd(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isFullyActive notContract {
     check_amount_out(_swap_wjax_jusd(msg.sender, msg.sender, amountIn), amountOutMin);
 	}
 
@@ -317,7 +323,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
 		emit Swap_BUSD_JUSD(from, to, amountIn, amountOut);
   }
   
-  function swap_busd_jusd(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+  function swap_busd_jusd(uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isFullyActive notContract {
     check_amount_out(_swap_busd_jusd(msg.sender, msg.sender, amountIn), amountOutMin);
 	}
 
