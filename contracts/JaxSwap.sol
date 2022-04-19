@@ -92,6 +92,10 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
   }
 
   modifier notContract() {
+    if(jaxAdmin.userIsGovernor(msg.sender)) {
+      _;
+      return;
+    }
     uint256 size;
     address addr = msg.sender;
     assembly {
