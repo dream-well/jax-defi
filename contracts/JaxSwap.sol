@@ -336,7 +336,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
     check_amount_out(_swap_jusd_busd(address(this), msg.sender, jusd_amount), amountOutMin);
   }
 
-  function swap_busd_jtoken(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+  function swap_busd_jtoken(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isFullyActive notContract {
     uint jusd_amount = _swap_busd_jusd(msg.sender, address(this), amountIn);
     check_amount_out(_swap_jusd_jtoken(address(this), msg.sender, jtoken, jusd_amount), amountOutMin);
 	}
@@ -346,7 +346,7 @@ contract JaxSwap is IJaxSwap, Initializable, JaxOwnable, JaxProtection {
     check_amount_out(_swap_jusd_wjax(address(this), msg.sender, jusd_amount), amountOutMin);
   }
 
-  function swap_wjax_jtoken(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isActive notContract {
+  function swap_wjax_jtoken(address jtoken, uint amountIn, uint amountOutMin, uint deadline) external ensure(deadline) isFullyActive notContract {
     uint jusd_amount = _swap_wjax_jusd(msg.sender, address(this), amountIn);
     check_amount_out(_swap_jusd_jtoken(address(this), msg.sender, jtoken, jusd_amount), amountOutMin);
   }
