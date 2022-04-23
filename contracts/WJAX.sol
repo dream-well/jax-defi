@@ -71,14 +71,13 @@ contract WJAX is BEP20, JaxProtection {
 
   struct GateKeeper {
     uint mintLimit;
-    uint burnLimit;
   }
 
   mapping (address => GateKeeper) gateKeeperInfo;
 
   event Set_Jax_Admin(address jax_admin);
   event Set_Gate_Keepers(address[] gate_keepers);
-  event Set_Mint_Burn_Limit(address gateKeeper, uint mintLimit, uint burnLimit);
+  event Set_Mint_Limit(address gateKeeper, uint mintLimit);
   event Set_Transaction_Fee(uint transaction_fee, uint trasnaction_fee_cap, address transaction_fee_wallet);
   event Set_Referral_Fee(uint referral_fee, uint referral_amount_threshold);
   event Set_Cashback(uint cashback_percent);
@@ -140,11 +139,10 @@ contract WJAX is BEP20, JaxProtection {
     emit Set_Gate_Keepers(_gateKeepers);
   }
 
-  function setMintBurnLimit(address gateKeeper, uint mintLimit, uint burnLimit) external onlyAjaxPrime onlyGateKeeper(gateKeeper) runProtection {
+  function setMintLimit(address gateKeeper, uint mintLimit) external onlyAjaxPrime onlyGateKeeper(gateKeeper) runProtection {
     GateKeeper storage info = gateKeeperInfo[gateKeeper];
     info.mintLimit = mintLimit;
-    info.burnLimit = burnLimit;
-    emit Set_Mint_Burn_Limit(gateKeeper, mintLimit, burnLimit);
+    emit Set_Mint_Limit(gateKeeper, mintLimit);
   }
 
   function setTransactionFee(uint tx_fee, uint tx_fee_cap, address wallet) external onlyJaxAdmin {
