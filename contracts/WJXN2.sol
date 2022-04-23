@@ -90,7 +90,7 @@ contract WJXN2 is BEP20, JaxProtection {
     */
     
   constructor ()
-      BEP20("Wrapped JAXNET 2", "WJXN2")
+      BEP20("Wrapped JAXNET 2", "WJXN-2")
   {
       _setupDecimals(8);
       tx_fee_wallet = msg.sender;
