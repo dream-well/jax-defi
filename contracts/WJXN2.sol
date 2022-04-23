@@ -41,8 +41,8 @@ interface IJaxAdmin {
 } 
 
 /**
-* @title WJAX
-* @dev Implementation of the WJAX. Extension of {BEP20} that adds a fee transaction behaviour.
+* @title WJXN2
+* @dev Implementation of WJXN with mint function and 8 decimals.
 */
 contract WJXN2 is BEP20, JaxProtection {
   
