@@ -432,7 +432,7 @@ contract JaxAdmin is Initializable, JaxOwnable, JaxProtection {
     if( wjax.balanceOf(jaxSwap) == 0 ) return 1e8;
     if( wjxn.balanceOf(jaxSwap) == 0 ) return 0;
     return 1e8 * ((10 ** wjax.decimals()) * (wjxn.balanceOf(jaxSwap) - withdrawal_amount) 
-        * get_wjxn_usd_ratio()) / (wjax.balanceOf(jaxSwap) * get_wjax_usd_ratio());
+        * get_wjxn_usd_ratio()) / (wjax.balanceOf(jaxSwap) * get_wjax_usd_ratio()) / (10 ** wjxn.decimals());
   }
   
   function get_wjxn_usd_ratio() public view returns (uint){
