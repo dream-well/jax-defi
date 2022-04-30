@@ -47,6 +47,7 @@ interface IJaxAdmin {
 contract WJXN2 is BEP20, JaxProtection {
   
   IJaxAdmin public jaxAdmin;
+  IBEP20 wjxn = IBEP20(0xcA1262e77Fb25c0a4112CFc9bad3ff54F617f2e6);
   address[] public gateKeepers;
 
   // transaction fee
@@ -298,13 +299,13 @@ contract WJXN2 is BEP20, JaxProtection {
   }
 
   function swap_wjxn_to_wjxn2(uint amountIn) external {
-    jaxAdmin.wjxn().transferFrom(msg.sender, address(this), amountIn);
+    wjxn.transferFrom(msg.sender, address(this), amountIn);
     super._mint(msg.sender, amountIn * (10 ** decimals()));
   }
 
   function swap_wjxn2_to_wjxn(uint amountOut) external {
     super._burn(msg.sender, amountOut * (10 ** decimals()));
-    jaxAdmin.wjxn().transfer(msg.sender, amountOut);
+    wjxn.transfer(msg.sender, amountOut);
   }
 
   function disable_fees(bool flag) external onlyAjaxPrime runProtection {
