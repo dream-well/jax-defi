@@ -3,6 +3,7 @@
 pragma solidity 0.8.11;
 
 import "./lib/BEP20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./JaxProtection.sol";
 
@@ -36,8 +37,6 @@ interface IJaxAdmin {
 
   function blacklist(address _user) external view returns (bool);
   function fee_freelist(address _user) external view returns (bool);
-
-  function wjxn() external view returns(IBEP20);
 } 
 
 /**
@@ -46,8 +45,10 @@ interface IJaxAdmin {
 */
 contract WJXN2 is BEP20, JaxProtection {
   
+  using SafeERC20 for IERC20;
+
   IJaxAdmin public jaxAdmin;
-  IBEP20 wjxn = IBEP20(0xcA1262e77Fb25c0a4112CFc9bad3ff54F617f2e6);
+  IERC20 wjxn = IERC20(0xcA1262e77Fb25c0a4112CFc9bad3ff54F617f2e6);
   address[] public gateKeepers;
 
   // transaction fee
@@ -56,7 +57,7 @@ contract WJXN2 is BEP20, JaxProtection {
 
   uint public referral_fee = 0;
   uint public referrer_amount_threshold = 0;
-  uint public cashback = 0; // 8 decimals
+  uint public cashback = 0; // Cashback has 8 decimals
 
   bool public fee_disabled = false;
 
@@ -124,18 +125,18 @@ contract WJXN2 is BEP20, JaxProtection {
     _;
   }
 
-  function setJaxAdmin(address _jaxAdmin) external onlyOwner {
-    jaxAdmin = IJaxAdmin(_jaxAdmin);  
-    emit Set_Jax_Admin(_jaxAdmin);
+  function setJaxAdmin(address newJaxAdmin) external onlyOwner {
+    jaxAdmin = IJaxAdmin(newJaxAdmin);  
+    emit Set_Jax_Admin(newJaxAdmin);
   }
 
-  function setGateKeepers(address[] calldata _gateKeepers) external onlyAjaxPrime runProtection {
-    uint cnt = _gateKeepers.length;
+  function setGateKeepers(address[] calldata newGateKeepers) external onlyAjaxPrime runProtection {
+    uint cnt = newGateKeepers.length;
     delete gateKeepers;
     for(uint index = 0; index < cnt; index += 1) {
-      gateKeepers.push(_gateKeepers[index]);
+      gateKeepers.push(newGateKeepers[index]);
     }
-    emit Set_Gate_Keepers(_gateKeepers);
+    emit Set_Gate_Keepers(newGateKeepers);
   }
 
   function setMintLimit(address gateKeeper, uint mintLimit) external onlyAjaxPrime onlyGateKeeper(gateKeeper) runProtection {
@@ -144,32 +145,32 @@ contract WJXN2 is BEP20, JaxProtection {
     emit Set_Mint_Limit(gateKeeper, mintLimit);
   }
 
-  function setTransactionFee(uint tx_fee, uint tx_fee_cap, address wallet) external onlyJaxAdmin {
-      require(tx_fee <= 1e8 * 3 / 100 , "Tx Fee percent can't be more than 3.");
+  function setTransactionFee(uint txFee, uint txFeeCap, address wallet) external onlyJaxAdmin {
+      require(txFee <= 1e8 * 3 / 100 , "Tx Fee percent can't be more than 3.");
       require(wallet != address(0x0), "Only non-zero address");
-      transaction_fee = tx_fee;
-      transaction_fee_cap = tx_fee_cap;
+      transaction_fee = txFee;
+      transaction_fee_cap = txFeeCap;
       tx_fee_wallet = wallet;
-      emit Set_Transaction_Fee(tx_fee, tx_fee_cap, wallet);
+      emit Set_Transaction_Fee(txFee, txFeeCap, wallet);
   }
 
   /**
     * @dev Set referral fee and minimum amount that can set sender as referrer
     */
-  function setReferralFee(uint _referral_fee, uint _referrer_amount_threshold) external onlyJaxAdmin {
-      require(_referral_fee <= 1e8 * 50 / 100 , "Referral Fee percent can't be more than 50.");
-      referral_fee = _referral_fee;
-      referrer_amount_threshold = _referrer_amount_threshold;
-      emit Set_Referral_Fee(_referral_fee, _referrer_amount_threshold);
+  function setReferralFee(uint newReferralFee, uint newReferrerAmountThreshold) external onlyJaxAdmin {
+      require(newReferralFee <= 1e8 * 50 / 100 , "Referral Fee percent can't be more than 50.");
+      referral_fee = newReferralFee;
+      referrer_amount_threshold = newReferrerAmountThreshold;
+      emit Set_Referral_Fee(newReferralFee, newReferrerAmountThreshold);
   }
 
   /**
     * @dev Set cashback
     */
-  function setCashback(uint cashback_percent) external onlyJaxAdmin {
-      require(cashback_percent <= 1e8 * 30 / 100 , "Cashback percent can't be more than 30.");
-      cashback = cashback_percent; // 8 decimals
-      emit Set_Cashback(cashback_percent);
+  function setCashback(uint newCashback) external onlyJaxAdmin {
+      require(newCashback <= 1e8 * 30 / 100 , "Cashback percent can't be more than 30.");
+      cashback = newCashback; // Cashback has 8 decimals
+      emit Set_Cashback(newCashback);
   }
 
   function transfer(address recipient, uint amount) public override(BEP20) notFrozen returns (bool) {
@@ -189,14 +190,14 @@ contract WJXN2 is BEP20, JaxProtection {
     require(!jaxAdmin.blacklist(sender), "sender is blacklisted");
     require(!jaxAdmin.blacklist(recipient), "recipient is blacklisted");
     if(amount == 0) return;
-    if(jaxAdmin.fee_freelist(msg.sender) == true || jaxAdmin.fee_freelist(recipient) == true || fee_disabled) {
+    if(jaxAdmin.fee_freelist(msg.sender) || jaxAdmin.fee_freelist(recipient) || fee_disabled) {
         return super._transfer(sender, recipient, amount);
     }
     if(referrers[sender] == address(0)) {
         referrers[sender] = address(0xdEaD);
     }
 
-    // Calculate transaction fee
+    // Calculation of transaction fee
     uint tx_fee_amount = amount * transaction_fee / 1e8;
 
     if(tx_fee_amount > transaction_fee_cap) {
@@ -209,7 +210,7 @@ contract WJXN2 is BEP20, JaxProtection {
 
     IJaxPlanet jaxPlanet = IJaxPlanet(jaxAdmin.jaxPlanet());
     
-    //Transfer of UBI Tax        
+    // Calculation of UBI amount       
     uint ubi_tax_amount = amount * jaxPlanet.ubi_tax() / 1e8;
 
     address colony_address = jaxPlanet.getUserColonyAddress(recipient);
@@ -256,14 +257,15 @@ contract WJXN2 is BEP20, JaxProtection {
                 }
             }
         }
-        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount); //1e8
+        super._transfer(sender, tx_fee_wallet, tx_fee_amount - totalreferral_fees - cashback_amount);
     }
     
     if(ubi_tax_amount > 0){
         super._transfer(sender, jaxPlanet.ubi_tax_wallet(), ubi_tax_amount);  // ubi tax
     }
      
-    // transferTransactionTax(mother_colony_addresses[recipient], tx_tax_amount, 1);          // Transfer tax to colonies and jaxCorp Dao
+    // transferTransactionTax(mother_colony_addresses[recipient], tx_tax_amount, 1);          
+    // Transfer tax to colonies and jaxCorp Dao
     // Optimize transferTransactionTax by using loop instead of recursive function
 
     if( tx_tax_amount > 0 ){
@@ -290,7 +292,7 @@ contract WJXN2 is BEP20, JaxProtection {
     }
   }
 
-  function mint(address account, uint amount) public notFrozen onlyGateKeeper(msg.sender) {
+  function mint(address account, uint amount) external notFrozen onlyGateKeeper(msg.sender) {
     require(!jaxAdmin.blacklist(account), "account is blacklisted");
     GateKeeper storage gateKeeper = gateKeeperInfo[msg.sender];
     require(gateKeeper.mintLimit >= amount, "Mint amount exceeds limit");
@@ -298,17 +300,17 @@ contract WJXN2 is BEP20, JaxProtection {
     gateKeeper.mintLimit -= amount;
   }
 
-  function swap_wjxn_to_wjxn2(uint amountIn) external {
-    wjxn.transferFrom(msg.sender, address(this), amountIn);
+  function swapWjxnToWjxn2(uint amountIn) external {
+    wjxn.safeTransferFrom(msg.sender, address(this), amountIn);
     super._mint(msg.sender, amountIn * (10 ** decimals()));
   }
 
-  function swap_wjxn2_to_wjxn(uint amountOut) external {
+  function swapWjxn2ToWjxn(uint amountOut) external {
     super._burn(msg.sender, amountOut * (10 ** decimals()));
-    wjxn.transfer(msg.sender, amountOut);
+    wjxn.safeTransfer(msg.sender, amountOut);
   }
 
-  function disable_fees(bool flag) external onlyAjaxPrime runProtection {
+  function disableFees(bool flag) external onlyAjaxPrime runProtection {
     fee_disabled = flag;
     emit Disable_Fees(flag);
   }
