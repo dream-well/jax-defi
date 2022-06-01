@@ -250,7 +250,7 @@ contract Ubi is Initializable, JaxProtection {
         info.jaxCorp_governor = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
-        userEntryRewards[user] = totalRewardPerPerson + advance;
+        userEntryRewards[user] = totalRewardPerPerson;
         if(advance > 0)
             IERC20(rewardToken).transfer(user, advance);
         emit Accept_User(user, idHash, advance, remarks);
