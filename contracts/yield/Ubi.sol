@@ -69,7 +69,7 @@ contract Ubi is Initializable, JaxProtection {
     mapping(address => uint) public voteCountInfo;
     mapping(address => address) public ubi_ajaxPrimeNomineeInfo;
 
-    uint total_ubi_paid;
+    uint public total_ubi_paid;
 
     modifier onlyUbiAjaxPrime() {
         require(msg.sender == ubi_ajaxPrime, "Only Ubi Ajax Prime");
