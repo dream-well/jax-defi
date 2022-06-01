@@ -69,6 +69,8 @@ contract Ubi is Initializable, JaxProtection {
     mapping(address => uint) public voteCountInfo;
     mapping(address => address) public ubi_ajaxPrimeNomineeInfo;
 
+    uint total_ubi_paid;
+
     modifier onlyUbiAjaxPrime() {
         require(msg.sender == ubi_ajaxPrime, "Only Ubi Ajax Prime");
         _;
@@ -85,15 +87,16 @@ contract Ubi is Initializable, JaxProtection {
         jaxCorpGovernorLimitInfo[msg.sender] -= 1;
     }
     
-  modifier checkZeroAddress(address account) {
-    require(account != address(0x0), "Only non-zero address");
-    _;
-  }
+    modifier checkZeroAddress(address account) {
+        require(account != address(0x0), "Only non-zero address");
+        _;
+    }
 
-    function get_user_info(address account) external view returns(Status status, uint idHash, uint collectedReward, uint releasedReward, uint collect_count, uint release_count, address jaxCorp_governor, string memory remarks) {
+    function get_user_info(address account) external view returns(Status status, uint idHash, uint harvestedReward, uint collectedReward, uint releasedReward, uint collect_count, uint release_count, address jaxCorp_governor, string memory remarks) {
         UserInfo memory user = userInfo[account];
         status = user.status;
         idHash = user.idHash;
+        harvestedReward = user.harvestedReward;
         collectedReward = user.collectedReward;
         releasedReward = user.releasedReward;
         collect_count = user.collects.length;
@@ -172,6 +175,7 @@ contract Ubi is Initializable, JaxProtection {
         require(rewardPerPerson >= minimumRewardPerPerson, "Reward is too small");
         IERC20(rewardToken).transferFrom(msg.sender, address(this), amount);
         totalRewardPerPerson += rewardPerPerson;
+        total_ubi_paid += amount;
         emit Deposit_Reward(amount);
     }
 
