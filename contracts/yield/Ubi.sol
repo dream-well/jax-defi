@@ -71,6 +71,8 @@ contract Ubi is Initializable, JaxProtection {
 
     uint public total_ubi_paid;
 
+    mapping(address => uint) userEntryRewards;
+
     modifier onlyUbiAjaxPrime() {
         require(msg.sender == ubi_ajaxPrime, "Only Ubi Ajax Prime");
         _;
@@ -92,13 +94,14 @@ contract Ubi is Initializable, JaxProtection {
         _;
     }
 
-    function get_user_info(address account) external view returns(Status status, uint idHash, uint harvestedReward, uint collectedReward, uint releasedReward, uint collect_count, uint release_count, address jaxCorp_governor, string memory remarks) {
+    function get_user_info(address account) external view returns(Status status, uint idHash, uint harvestedReward, uint collectedReward, uint releasedReward, uint entryReward, uint collect_count, uint release_count, address jaxCorp_governor, string memory remarks) {
         UserInfo memory user = userInfo[account];
         status = user.status;
         idHash = user.idHash;
         harvestedReward = user.harvestedReward;
         collectedReward = user.collectedReward;
         releasedReward = user.releasedReward;
+        entryReward = userEntryRewards[account];
         collect_count = user.collects.length;
         jaxCorp_governor = user.jaxCorp_governor;
         for(uint i = 0; i < user.collects.length; i += 1) {
@@ -247,6 +250,7 @@ contract Ubi is Initializable, JaxProtection {
         info.jaxCorp_governor = msg.sender;
         info.status = Status.Approved;
         idHashInfo[idHash] = user;
+        userEntryRewards[user] = totalRewardPerPerson + advance;
         if(advance > 0)
             IERC20(rewardToken).transfer(user, advance);
         emit Accept_User(user, idHash, advance, remarks);
