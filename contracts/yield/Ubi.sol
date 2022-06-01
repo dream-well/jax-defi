@@ -240,6 +240,8 @@ contract Ubi is Initializable, JaxProtection {
         }
         userCount += 1;
         info.harvestedReward = totalRewardPerPerson + advance;
+        info.collectedReward = advance;
+        info.releasedReward = advance;
         info.idHash = idHash;
         info.remarks = remarks;
         info.jaxCorp_governor = msg.sender;
